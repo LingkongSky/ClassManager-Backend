@@ -4,7 +4,7 @@ namespace App\Http\Requests\Class;
 
 use App\Http\Requests\Request;
 
-class GetClassRequest extends Request
+class GetRequest extends Request
 {
     public function rules(): array
     {

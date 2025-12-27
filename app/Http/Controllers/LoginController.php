@@ -24,7 +24,7 @@ class LoginController extends Controller
             $student = Student::where('account', $request->input('account'))->first();
 
             // 验证密码
-            if (!$student || $student->passwordHash($request->input('password')) !== $student->password) {
+            if (!$student || Student::passwordHash($request->input('password')) !== $student->password) {
                 $this->handleFailedLogin($request);
                 throw ValidationException::withMessages([
                     ['账号或密码错误'],

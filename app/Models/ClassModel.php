@@ -35,12 +35,6 @@ class ClassModel extends Model
         return $value ?: 0;
     }
 
-    // 修改器：设置班级名称
-    public function setClassNameAttribute($value)
-    {
-        $this->attributes['class_name'] = trim($value);
-    }
-
     // 关系：班级有多个学生
     public function students(): HasMany
     {
@@ -82,8 +76,7 @@ class ClassModel extends Model
         }
     }
 
-
-
+    // 根据班级ID删除班级
     public static function deleteClass(string $classId)
     {
         try {
@@ -119,6 +112,10 @@ class ClassModel extends Model
         }
     }
 
+    // 获取班级名称
+    public static function getClassName($class_id){
+        return self::query()->where('class_id',$class_id)->first()->class_name;
+    }
 
     // 查询班级列表
     public static function queryClasses($query_count = 0, $query_word = '', $limit = 20)
@@ -164,17 +161,17 @@ class ClassModel extends Model
             ->limit($limit)
             ->get();
     }
+
+    // 获取所有班级
+    public static function getAllClasses()
+    {
+        return self::orderBy('class_id')->get(['class_id','class_name']);
+    }
+
     // 修改班级信息
     public static function editClass(string $classId, string $newClassName): array
     {
         try {
-            if (empty($newClassName)) {
-                return [
-                    'success' => false,
-                    'message' => '班级名称不能为空'
-                ];
-            }
-
             // 查找班级
             $class = self::where('class_id', $classId)->first();
 

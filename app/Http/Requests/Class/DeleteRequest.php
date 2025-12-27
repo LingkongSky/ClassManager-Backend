@@ -5,7 +5,7 @@ namespace App\Http\Requests\Class;
 use App\Utils\RequestTool;
 use App\Http\Requests\Request;
 
-class AddClassRequest extends Request
+class DeleteRequest extends Request
 {
     public function rules(): array
     {
@@ -37,11 +37,8 @@ class AddClassRequest extends Request
 
         // 遍历并处理每个元素
         foreach ($class_list as &$item) {
-            if (isset($item["class_name"])) {
-                $class_name = RequestTool::xxs($item["class_name"]);
-                $class_name = str_replace(' ', '', $class_name);
-                $item["class_name"] = $class_name;
-            }
+                $class_id = RequestTool::xxs($item);
+                $item = $class_id;
         }
 
         $input["class_list"] = $class_list;

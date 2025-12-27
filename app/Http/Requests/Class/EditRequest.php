@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests\Class;
 
-use App\Utils\RequestTool;
 use App\Http\Requests\Request;
 
-class EditClassRequest extends Request
+class EditRequest extends Request
 {
     public function rules(): array
     {

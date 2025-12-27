@@ -11,6 +11,7 @@ class RequestTool
         $key = addslashes($key);
         $key = strip_tags($key);
         $key = preg_replace('/\/\/|#/', '', $key);
+        $key = trim($key);
         return $key;
     }
 }

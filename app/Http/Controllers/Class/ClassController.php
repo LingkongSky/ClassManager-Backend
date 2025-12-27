@@ -3,18 +3,19 @@
 namespace App\Http\Controllers\Class;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Class\AddClassRequest;
-use App\Http\Requests\Class\DeleteClassRequest;
-use App\Http\Requests\Class\EditClassRequest;
-use App\Http\Requests\Class\GetClassRequest;
-use App\Http\Requests\Class\GetCountClassRequest;
+use App\Http\Requests\Class\AddRequest;
+use App\Http\Requests\Class\DeleteRequest;
+use App\Http\Requests\Class\EditRequest;
+use App\Http\Requests\Class\GetRequest;
+use App\Http\Requests\Class\GetCountRequest;
+use Illuminate\Http\Request;
 use App\Models\ClassModel;
 use App\Utils\ResponseTool;
 
 class ClassController extends Controller
 {
     // 创建班级
-    public function add(AddClassRequest $request)
+    public function add(AddRequest $request)
     {
         $class_list = $request->input("class_list");
         $i = 0;
@@ -28,7 +29,7 @@ class ClassController extends Controller
     }
 
     // 删除班级
-    public function delete(DeleteClassRequest $request)
+    public function delete(DeleteRequest $request)
     {
         $class_list = $request->input("class_list");
 
@@ -40,7 +41,7 @@ class ClassController extends Controller
     }
 
     // 查询班级
-    public function get(GetClassRequest $request)
+    public function get(GetRequest $request)
     {
         $queryCount = $request->input('query_count');
         $queryWord = $request->input('query_word');
@@ -68,7 +69,13 @@ class ClassController extends Controller
         return ResponseTool::jsonResponse(0, 'success', $all_class);
     }
 
-    public function edit(EditClassRequest $request)
+    // 获取班级列表
+    public function getList(Request $request){   
+        return ResponseTool::jsonResponse(0, 'success', $request->user()->getStudentPermissionClass());
+    }
+
+
+    public function edit(EditRequest $request)
     {
         $classId = $request->input('class_id');
         $className = $request->input('class_name');
@@ -78,7 +85,7 @@ class ClassController extends Controller
 
 
     // 获取班级数量
-    public function getCount(GetCountClassRequest $request)
+    public function getCount(GetCountRequest $request)
     {
         return ResponseTool::jsonResponse(0, 'success', ClassModel::getClassCount($request->input("query_word")));
     }

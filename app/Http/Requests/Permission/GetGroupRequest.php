@@ -1,21 +1,23 @@
 <?php
 
-namespace App\Http\Requests\Class;
+namespace App\Http\Requests\Permission;
 
 use App\Http\Requests\Request;
 
-class GetCountClassRequest extends Request
+class GetGroupRequest extends Request
 {
     public function rules(): array
     {
         return [
+            'query_count' => 'required|integer|max:100',
             'query_word' => 'present|nullable|string|max:30',
-        ];
+            ];
     }
 
     public function messages(): array
     {
         return [
+            'query_count.required' => '查询数量不能为空',
             'query_word.required' => '搜索条件不能为空',
         ];
     }
