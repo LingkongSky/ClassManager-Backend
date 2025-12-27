@@ -64,9 +64,106 @@ class Student extends Authenticatable
         return hash_hmac("sha256", $password, config('app.password_sign'));
     }
 
+
+    public function createStudent(
+        string $account,
+        string $name,
+        string $password,
+        ?string $classId = null,
+        ?int $level = 0,
+        ?string $permissionsGroupId = null,
+    ) {
+
+        if ($this->level < 10) {
+            $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
+            if (!$permissionsGroup) {
+                return null;
+            }
+            if ($classId) {
+                if (!$permissionsGroup->hasTarget($classId)) {
+                    return null;
+                }
+            }
+        }
+
+        try {
+
+            $existingStudent = self::where('account', $account)->first();
+            if ($existingStudent) {
+                return [
+                    'success' => false,
+                    'message' => '账号已存在'
+                ];
+            }
+
+            if ($classId) {
+                $class = ClassModel::find($classId);
+                if (!$class) {
+                    return [
+                        'success' => false,
+                        'message' => '班级不存在'
+                    ];
+                }
+            }
+
+            if ($permissionsGroupId) {
+                $permissionGroup = PermissionsGroup::find($permissionsGroupId);
+                if (!$permissionGroup) {
+                    return [
+                        'success' => false,
+                        'message' => '权限组不存在'
+                    ];
+                }
+            }
+
+            $student = new self();
+            $student->account = $account;
+            $student->name = $name;
+            $student->password = Student::passwordHash($password);
+
+            if ($level !== null) {
+                $student->level = $level;
+            }
+
+            if ($classId !== null) {
+                $student->class_id = $classId;
+            }
+
+            if ($permissionsGroupId !== null) {
+                $student->permissions_group_id = $permissionsGroupId;
+            }
+
+
+            // 保存到数据库
+            $student->save();
+
+            return [
+                'success' => true,
+                'message' => '账号创建成功',
+                'data' => null
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => '创建账号失败: ' . $e->getMessage()
+            ];
+        }
+    }
+
     // 删除对象
-    public static function deleteByAccount(string $account): array
+    public function deleteByAccount(string $account)
     {
+
+        if ($this->level < 10) {
+            $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
+            if (!$permissionsGroup) {
+                return null;
+            }
+            if (!$permissionsGroup->hasTarget(self::getUserClass($account))) {
+                return null;
+            }
+        }
+
         try {
             $student = self::where('account', $account)->first();
 
@@ -108,7 +205,6 @@ class Student extends Authenticatable
     {
 
         if ($this->level == 10) {
-
             return ClassModel::getAllClasses();
         } else {
 
@@ -120,6 +216,26 @@ class Student extends Authenticatable
 
             return $permissionsGroup->getPermissionTarget();
         }
+    }
+
+    // 根据班级查询学生
+    public function getStudentByClass($classId, $queryWord, $queryCount, $limit = 20)
+    {
+        if ($this->level < 10) {
+            $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
+            if (!$permissionsGroup) {
+                return null;
+            }
+            if (!$permissionsGroup->hasTarget($classId)) {
+                return null;
+            }
+        }
+
+        return $this->query()->where('class_id', $classId)
+            ->where('name', 'like', '%' . $queryWord . '%')
+            ->offset($queryCount)
+            ->limit($limit)
+            ->get();;
     }
 
     // 查询所有管理员
@@ -150,12 +266,39 @@ class Student extends Authenticatable
         return $query->where('level', 5)->count();
     }
 
+    // 获取学生班级
+    public static function getUserClass($account)
+    {
+        return self::query()->where('account', $account)->get('class_id');
+    }
+
     // 获取学生数量
     public static function getStudentCount(): int
     {
         return self::count();
     }
 
+    // 根据班级获取学生数量
+    public function getCountByClass(string $class_id, ?string $query_word = '')
+    {
+        if ($this->level < 10) {
+            $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
+            if (!$permissionsGroup) {
+                return null;
+            }
+            if (!$permissionsGroup->hasTarget($class_id)) {
+                return null;
+            }
+        }
+
+        $query = self::query()->where('class_id', $class_id);
+
+        if (!empty($query_word)) {
+            $query->where('name', 'like', '%' . $query_word . '%');
+        }
+
+        return $query->count();
+    }
 
     // 修改密码
     public static function editAdminPassword(string $account, string $password)
@@ -168,6 +311,33 @@ class Student extends Authenticatable
             return [
                 'success' => false,
                 'message' => '管理员账号不存在'
+            ];
+        }
+        $admin->password = Student::passwordHash($password);
+        $admin->save();
+    }
+
+    // 管理员修改学生密码
+    public function editPassword(string $account, string $password)
+    {
+
+        if ($this->level < 10) {
+            $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
+            if (!$permissionsGroup) {
+                return null;
+            }
+            if (!$permissionsGroup->hasTarget(self::getUserClass($account))) {
+                return null;
+            }
+        }
+
+        $admin = self::where('account', $account)
+            ->first();
+
+        if (!$admin) {
+            return [
+                'success' => false,
+                'message' => '账号不存在'
             ];
         }
         $admin->password = Student::passwordHash($password);
@@ -228,6 +398,56 @@ class Student extends Authenticatable
         }
     }
 
+
+    // 修改用户 TODO 对转移后的班级进行鉴权
+    public function edit(string $account, string $name, string $class_id)
+    {
+        if ($this->level < 10) {
+            $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
+            if (!$permissionsGroup) {
+                return null;
+            }
+            if (!$permissionsGroup->hasTarget(self::getUserClass($account))) {
+                return null;
+            }
+        }
+
+        try {
+            // 查找对应账号
+            $user = self::where('account', $account)
+                ->first();
+
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => '账号不存在'
+                ];
+            }
+
+            $class = ClassModel::find($class_id);
+            if (!$class) {
+                return [
+                    'success' => false,
+                    'message' => '班级不存在'
+                ];
+            }
+
+            $user->class_id = $class_id;
+            $user->name = $name;
+            $user->save();
+
+            return [
+                'success' => true,
+                'message' => '息修改成功',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => '修改信息失败: ' . $e->getMessage()
+            ];
+        }
+    }
+
     // 设置用户的权限组
     public static function setPermissionGroup($account, $permission_group_id)
     {
@@ -263,87 +483,6 @@ class Student extends Authenticatable
             return [
                 'success' => false,
                 'message' => '设置管理员错误: ' . $e->getMessage()
-            ];
-        }
-    }
-
-
-    public static function createStudent(
-        string $account,
-        string $name,
-        string $password,
-        ?int $level = 0,
-        ?string $classId = null,
-        ?string $permissionsGroupId = null,
-    ): array {
-        try {
-
-            $existingStudent = self::where('account', $account)->first();
-            if ($existingStudent) {
-                return [
-                    'success' => false,
-                    'message' => '账号已存在'
-                ];
-            }
-
-            if ($classId) {
-                $class = ClassModel::find($classId);
-                if (!$class) {
-                    return [
-                        'success' => false,
-                        'message' => '班级不存在'
-                    ];
-                }
-            }
-
-            if ($permissionsGroupId) {
-                $permissionGroup = PermissionsGroup::find($permissionsGroupId);
-                if (!$permissionGroup) {
-                    return [
-                        'success' => false,
-                        'message' => '权限组不存在'
-                    ];
-                }
-            }
-
-            $student = new self();
-            $student->account = $account;
-            $student->name = $name;
-
-            $student->password = Student::passwordHash($password);
-
-            if ($level !== null) {
-                $student->level = $level;
-            }
-
-            if ($classId !== null) {
-                $student->class_id = $classId;
-            }
-
-            if ($permissionsGroupId !== null) {
-                $student->permissions_group_id = $permissionsGroupId;
-            }
-
-
-            // 保存到数据库
-            $student->save();
-
-            return [
-                'success' => true,
-                'message' => '账号创建成功',
-                'data' => [
-                    'id' => $student->id,
-                    'account' => $student->account,
-                    'name' => $student->name,
-                    'level' => $student->level,
-                    'class_id' => $student->class_id,
-                    'permissions_group_id' => $student->permissions_group_id,
-                ]
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'message' => '创建账号失败: ' . $e->getMessage()
             ];
         }
     }
