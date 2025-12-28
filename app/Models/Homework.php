@@ -27,35 +27,71 @@ class Homework extends Model
         'update_time' => 'datetime',
     ];
 
-    // 访问器：获取文件扩展名
-    public function getFileExtensionAttribute()
+
+    // 按活动筛选
+    public static function getTableByActivity($activityId, $queryWord, $queryCount, $limit = 20)
     {
-        return pathinfo($this->file_name, PATHINFO_EXTENSION);
+        $query = Student::select(
+            'students.name',
+            'students.account',
+            'students.class_id',
+            'homework.update_time',
+            'homework.activity_id'
+        )
+            ->leftJoin('homework', function ($join) use ($activityId) {
+                $join->on('students.account', '=', 'homework.account')
+                    ->where('homework.activity_id', '=', $activityId);
+            })
+            ->where('students.class_id', Activity::getClass($activityId));
+
+        if (!empty($queryWord)) {
+            $query->where('students.name', 'like', '%' . $queryWord . '%');
+        }
+
+        // 执行查询
+        return $query->orderBy('homework.activity_id')
+            ->orderBy('students.account')
+            ->offset($queryCount)
+            ->limit($limit)
+            ->get();
     }
 
-    // 访问器：获取文件名（不含扩展名）
-    public function getFileNameWithoutExtensionAttribute()
-    {
-        return pathinfo($this->file_name, PATHINFO_FILENAME);
+    public static function getTableByActivityWithSort(
+        $activityId,
+        $query_word,
+        $query_count,
+        $sort_mode,
+        $sort_field,
+        $limit = 20
+    ) {
+        $query = Student::select(
+            'students.name',
+            'students.account',
+            'students.class_id',
+            'homework.update_time',
+            'homework.activity_id'
+        )
+            ->leftJoin('homework', function ($join) use ($activityId) {
+                $join->on('students.account', '=', 'homework.account')
+                    ->where('homework.activity_id', '=', $activityId);
+            })
+            ->where('students.class_id', Activity::getClass($activityId));
+
+        // 添加姓名筛选条件
+        if (!empty($query_word)) {
+            $query->where('students.name', 'like', '%' . $query_word . '%');
+        }
+  
+        $sort_mode = strtolower($sort_mode) === 'desc' ? 'desc' : 'asc';
+        $query->orderBy($sort_field, $sort_mode);
+
+        // 执行查询
+        return $query->offset($query_count)
+            ->limit($limit)
+            ->get();
     }
 
-    // 访问器：格式化更新时间
-    public function getFormattedUpdateTimeAttribute()
-    {
-        return date('Y-m-d H:i:s', strtotime($this->update_time));
-    }
 
-    // 查询作用域：按学生筛选
-    public function scopeByStudent($query, $account)
-    {
-        return $query->where('account', $account);
-    }
-
-    // 查询作用域：按活动筛选
-    public function scopeByActivity($query, $activityId)
-    {
-        return $query->where('activity_id', $activityId);
-    }
 
     // 查询作用域：最新提交
     public function scopeLatestSubmission($query)

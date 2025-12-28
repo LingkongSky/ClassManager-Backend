@@ -235,7 +235,7 @@ class Student extends Authenticatable
             ->where('name', 'like', '%' . $queryWord . '%')
             ->offset($queryCount)
             ->limit($limit)
-            ->get();;
+            ->get();
     }
 
     // 查询所有管理员
@@ -321,7 +321,7 @@ class Student extends Authenticatable
     public function editPassword(string $account, string $password)
     {
 
-        if ($this->level < 10) {
+        if ($this->level < 10 && $account != $this->account) {
             $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
             if (!$permissionsGroup) {
                 return null;
@@ -331,19 +331,20 @@ class Student extends Authenticatable
             }
         }
 
-        $admin = self::where('account', $account)
+        $user = self::where('account', $account)
             ->first();
 
-        if (!$admin) {
+        if (!$user) {
             return [
                 'success' => false,
                 'message' => '账号不存在'
             ];
         }
-        $admin->password = Student::passwordHash($password);
-        $admin->save();
+        $user->password = Student::passwordHash($password);
+        $user->save();
     }
 
+    
     // 修改管理员
     public static function editAdmin(string $account, string $name, ?string $class_id, string $permission_group_id)
     {

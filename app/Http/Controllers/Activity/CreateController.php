@@ -3,22 +3,28 @@
 namespace App\Http\Controllers\Activity;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Activity\CreateActivityRequest;
+use App\Http\Requests\Activity\CreateRequest;
+use App\Models\Activity;
+use App\Utils\ResponseTool;
 
-class ActivityCreateController extends Controller
+class CreateController extends Controller
 {
 
+    // TODO 处理文件校验 存放与转移
+
     //创建活动
-    public function create(CreateActivityRequest $request)
+    public function create(CreateRequest $request)
     {
-        // 处理上传文件
+        $name = $request->input('name');
+        $title = $request->input('title');
+        $class_id = $request->input('class_id');
+        $requestment = $request->input('requestment');
+        $rename_format = $request->input('rename_format');
+        $accept = $request->input('accept');
+        $start_time = $request->input('start_time');
+        $stop_time = $request->input('stop_time');
 
-        // 数据入库
-
-        // 日志入库
-
-        // Redis刷新
-
-        //返回内容
+        Activity::create($name, $title, $class_id, $requestment, $rename_format, $accept, $start_time, $stop_time);
+        return ResponseTool::jsonResponse(0, 'success', null);
     }
 }

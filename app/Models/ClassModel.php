@@ -29,25 +29,6 @@ class ClassModel extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    // 访问器：学生人数
-    public function getStudentCountAttribute($value)
-    {
-        return $value ?: 0;
-    }
-
-    // 关系：班级有多个学生
-    public function students(): HasMany
-    {
-        return $this->hasMany(Student::class, 'class_id', 'class_id');
-    }
-
-    // 关系：班级有多个活动
-    public function activities(): HasMany
-    {
-        return $this->hasMany(Activity::class, 'class_id', 'class_id');
-    }
-
-
     // 创建班级
     public static function addClass(string $classId, string $className)
     {
@@ -210,4 +191,5 @@ class ClassModel extends Model
 
         return $query->count();
     }
+
 }

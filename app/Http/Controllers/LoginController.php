@@ -72,7 +72,7 @@ class LoginController extends Controller
     // 登出
     public function logout(Request $request): JsonResponse
     {
-        return ResponseTool::jsonResponse(0, '登出成功', null);
+        return ResponseTool::jsonResponse(0, 'success', null);
     }
 
     // 获取用户数量
