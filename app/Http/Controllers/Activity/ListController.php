@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Activity\GetCountRequest;
 use App\Http\Requests\Activity\GetListRequest;
 use App\Http\Requests\Activity\GetTableRequest;
+use App\Http\Requests\Activity\ExportRequest;
 use App\Http\Requests\Activity\GetHomeworkTableRequest;
 use App\Utils\ResponseTool;
 use App\Models\Activity;
@@ -22,19 +23,26 @@ class ListController extends Controller
         return ResponseTool::jsonResponse(0, 'success', $data);
     }
 
-    // 获取活动数量 TODO: 班级鉴权
+    // 获取活动数量
     public function getCount(GetCountRequest $request)
     {
+        if (!$request->user()->isClassInPermisssion($request->input("class_id"))) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
         $count = Activity::getCountByClass($request->input("class_id"), $request->input("query_word"));
         return ResponseTool::jsonResponse(0, 'success', $count);
     }
 
-    // 根据班级获取活动 TODO: 鉴权
+    // 根据班级获取活动
     public function getTable(GetTableRequest $request)
     {
         $queryCount = $request->input('query_count');
         $queryWord = $request->input('query_word');
         $classId = $request->input('class_id');
+
+        if (!$request->user()->isClassInPermisssion($classId)) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
 
         $activity = Activity::getTableByClass(
             $classId,
@@ -58,7 +66,7 @@ class ListController extends Controller
     }
 
 
-    // 根据活动获取作业 TODO: 鉴权
+    // 根据活动获取作业
     public function GetHomeworkTable(GetHomeworkTableRequest $request)
     {
         $queryCount = $request->input('query_count');
@@ -66,6 +74,11 @@ class ListController extends Controller
         $activityId = $request->input('activity_id');
         $sortMode = $request->input('sort_mode');
         $sortField = $request->input('sort_field');
+
+        // 判断当前账号是否有活动权限
+        if (!$request->user()->isClassInPermisssion(Activity::getClass($activityId))) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
 
         if (!is_null($sortMode) && !is_null($sortField)) {
             $users = Homework::getTableByActivityWithSort($activityId, $queryWord, $queryCount,  $sortMode, $sortField);
@@ -96,5 +109,38 @@ class ListController extends Controller
         }
 
         return ResponseTool::jsonResponse(0, 'success', $all_activities);
+    }
+
+
+    //导出活动 TODO 
+    public function export(ExportRequest $request)
+    {
+
+        $activity = Activity::getInfo($request->input('activity_id'));
+        $times = $request->input('times');
+
+        // 判断当前账号是否有活动权限
+        if (!$request->user()->isClassInPermisssion($activity->class_id)) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+
+        $path = "";
+
+        if (file_exists($path) && $times != "third") {
+            ResponseTool::jsonResponse(3, "have output", NULL);
+        } else if ($times == "second") {            // 直接返回路径
+            ResponseTool::jsonResponse(0, "success", $path);
+        }
+
+        // 不存在则生成成品并返回
+
+        // 定位路径
+
+        // 批量重命名
+
+        // 打包zip
+
+        return ResponseTool::jsonResponse(0, 'success', null);
     }
 }

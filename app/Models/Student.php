@@ -189,7 +189,7 @@ class Student extends Authenticatable
     }
 
     // 判断传入的class_id是否在用户的权限组里
-    public function isClassInPermisssion($classId)
+    public function isClassInPermisssion($classId): bool
     {
         $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
 
@@ -203,7 +203,6 @@ class Student extends Authenticatable
     // 获取管理员的所属班级
     public function getStudentPermissionClass()
     {
-
         if ($this->level == 10) {
             return ClassModel::getAllClasses();
         } else {
@@ -269,13 +268,18 @@ class Student extends Authenticatable
     // 获取学生班级
     public static function getUserClass($account)
     {
-        return self::query()->where('account', $account)->get('class_id');
+        return self::query()->where('account', $account)->first()->class_id;
     }
 
     // 获取学生数量
     public static function getStudentCount(): int
     {
         return self::count();
+    }
+
+    // 获取学生名字
+    public static function getName($account){
+        return self::query()->where('account', $account)->first()->name;
     }
 
     // 根据班级获取学生数量

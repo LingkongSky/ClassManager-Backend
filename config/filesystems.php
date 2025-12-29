@@ -41,12 +41,39 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
         ],
-
+        'activity' => [
+            'driver' => 'local',
+            'root' => storage_path('activity'),
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+        'temp' => [
+            'driver' => 'local',
+            'root' => storage_path('temp'),
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+        'output' => [
+            'driver' => 'local',
+            'root' => storage_path('output'),
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+        'publish' => [
+            'driver' => 'local',
+            'root' => storage_path('publish'),
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

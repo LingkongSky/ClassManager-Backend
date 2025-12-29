@@ -21,7 +21,7 @@ Route::middleware('StudentAuth')->group(function () {
         Route::get('getStartedCount', [TodosController::class, 'getStartedCount']);
         Route::get('open', [TodosController::class, 'open']);
         Route::post('submit', [TodosController::class, 'submit']);
-        Route::post('download', [TodosController::class, 'download']);
+        Route::get('download', [TodosController::class, 'download']);
         Route::post('delete', [TodosController::class, 'delete']);
     });
 });

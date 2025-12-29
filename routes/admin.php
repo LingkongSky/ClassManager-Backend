@@ -21,7 +21,7 @@ Route::middleware('AdminAuth')->group(function () {
         Route::post('edit', [EditController::class, 'edit']);
         Route::post('editTime', [EditController::class, 'editTime']);
         Route::post('delete', [EditController::class, 'delete']);
-        Route::post('export', [EditController::class, 'export']);
+        Route::post('export', [ListController::class, 'export']);
     });
 
     Route::prefix('class')->group(function () {
@@ -38,7 +38,7 @@ Route::middleware('AdminAuth')->group(function () {
     });
 
     Route::prefix('todos')->group(function () {
-        Route::post('downloadAdmin', [TodosController::class, 'downloadAdmin']);
+        Route::get('downloadAdmin', [TodosController::class, 'downloadAdmin']);
         Route::post('deleteAdmin', [TodosController::class, 'deleteAdmin']);
         Route::post('submitAdmin', [TodosController::class, 'submitAdmin']);
     });

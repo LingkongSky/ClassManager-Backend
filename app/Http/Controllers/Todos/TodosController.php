@@ -6,9 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Request;
 use App\Models\Homework;
 use App\Models\Activity;
+use App\Models\ClassModel;
+use App\Models\Student;
 use App\Http\Requests\Todos\OpenRequest;
 use App\Http\Requests\Todos\GetStartedRequest;
+use App\Http\Requests\Todos\SubmitAdminRequest;
+use App\Http\Requests\Todos\SubmitRequest;
+use App\Http\Requests\Todos\DeleteRequest;
+use App\Http\Requests\Todos\DeleteAdminRequest;
+use App\Http\Requests\Todos\DownloadRequest;
+use App\Http\Requests\Todos\DownloadAdminRequest;
 use App\Utils\ResponseTool;
+use Illuminate\Support\Facades\Storage;
 
 class TodosController extends Controller
 {
@@ -99,13 +108,177 @@ class TodosController extends Controller
         return ResponseTool::jsonResponse(0, 'success', $data);
     }
 
-    public function delete(Request $request) {}
-    public function deleteAdmin(Request $request) {}
+    // 提交作业
+    public function submit(SubmitRequest $request)
+    {
 
+        $activity = Activity::getInfo($request->input('activity_id'));
 
-    public function download(Request $request) {}
-    public function downloadAdmin(Request $request) {}
+        // 判断活动状态是否为1
+        if ($activity->status != 1) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
 
-    public function submit(Request $request) {}
-    public function submitAdmin(Request $request) {}
+        // 判断学生是否与活动处于同一班级
+        if ($activity->class_id != $request->user()->class_id) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        $file = $request->file('file');
+        $extension = $file->getClientOriginalExtension();
+        $className = ClassModel::getClassName($activity->class_id);
+        $newName = "{$className} {$request->user()->name} {$request->user()->account}.{$extension}";
+
+        // 提交作业
+        Homework::submitHomework($activity->activity_id, $request->user()->account, $activity->class_id, $newName);
+
+        // 移动作业
+        $file->storeAs(
+            "homework/{$activity->activity_id}/{$activity->class_id}",
+            $newName,
+            'activity'
+        );
+
+        return ResponseTool::jsonResponse(0, 'success', null);
+    }
+
+    // 管理员提交作业
+    public function submitAdmin(SubmitAdminRequest $request)
+    {
+
+        $activity = Activity::getInfo($request->input('activity_id'));
+        $targetAccount = $request->input('target_account');
+
+        // 判断学生是否与活动处于同一班级
+        if ($activity->class_id != Student::getUserClass($targetAccount)) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        // 判断当前账号是否有活动权限
+        if (!$request->user()->isClassInPermisssion($activity->class_id)) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        $file = $request->file('file');
+        $extension = $file->getClientOriginalExtension();
+        $className = ClassModel::getClassName($activity->class_id);
+        $accountName = Student::getName($targetAccount);
+        $newName = "{$className} {$accountName} {$targetAccount}.{$extension}";
+
+        // 提交作业
+        Homework::submitHomework($activity->activity_id, $targetAccount, $activity->class_id, $newName);
+
+        // 移动文件
+        $file->storeAs(
+            "homework/{$activity->activity_id}/{$activity->class_id}",
+            $newName,
+            'activity'
+        );
+
+        return ResponseTool::jsonResponse(0, 'success', null);
+    }
+
+    // 删除提交的作业
+    public function delete(DeleteRequest $request)
+    {
+        $activity = Activity::getInfo($request->input('activity_id'));
+
+        // 判断活动状态是否为1
+        if ($activity->status != 1) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        // 判断是否已提交
+        $homework = Homework::getSubmitInfo($request->user()->account, $activity->activity_id);
+        if (!$homework) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        // 删除文件
+        $filePath = "homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
+        
+        $storage = Storage::disk('activity');
+        if ($storage->exists($filePath)) {
+            $storage->delete($filePath);
+        }
+    
+        // 删除提交
+        Homework::deleteSubmit($request->user()->account, $activity->activity_id);
+
+        return ResponseTool::jsonResponse(0, 'success', null);
+    }
+
+    // 管理员删除提交的作业
+    public function deleteAdmin(DeleteAdminRequest $request)
+    {
+
+        $activity = Activity::getInfo($request->input('activity_id'));
+        $targetAccount = $request->input('target_account');
+
+        // 判断当前账号是否有活动权限
+        if (!$request->user()->isClassInPermisssion($activity->class_id)) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        // 判断是否已提交
+        $homework = Homework::getSubmitInfo($targetAccount, $activity->activity_id);
+        if (!$homework) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        // 删除文件
+        $filePath = "homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
+        
+        $storage = Storage::disk('activity');
+        if ($storage->exists($filePath)) {
+            $storage->delete($filePath);
+        }
+
+        // 删除提交
+        Homework::deleteSubmit($targetAccount, $activity->activity_id);
+
+        return ResponseTool::jsonResponse(0, 'success', null);
+    }
+
+    // 下载作业
+    public function download(DownloadRequest $request) {
+
+        $activity = Activity::getInfo($request->input('activity_id'));
+
+        // 判断活动状态是否为1
+        if ($activity->status != 1) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        // 检测是否提交
+        $homework = Homework::getSubmitInfo($request->user()->account, $activity->activity_id);
+        if (!$homework) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        $filePath = "/download/homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
+
+        return ResponseTool::jsonResponse(0, 'success', $filePath);
+    }
+
+    // 管理员下载作业
+    public function downloadAdmin(DownloadAdminRequest $request) {
+        $activity = Activity::getInfo($request->input('activity_id'));
+        $targetAccount = $request->input('target_account');
+
+        // 判断当前账号是否有活动权限
+        if (!$request->user()->isClassInPermisssion($activity->class_id)) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        // 检测是否提交
+        $homework = Homework::getSubmitInfo($targetAccount, $activity->activity_id);
+        if (!$homework) {
+            return ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
+        $filePath = "/download/homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
+
+        return ResponseTool::jsonResponse(0, 'success', $filePath);
+    }
 }

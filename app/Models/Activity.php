@@ -59,7 +59,7 @@ class Activity extends Model
             'class_id' => $class_id,
             'requestment' => $requestment,
             'rename_format' => $rename_format,
-            'accept' => $accept,
+            'accept' => strtolower($accept),
             'start_time' => $start_time,
             'stop_time' => $stop_time,
             'status' => 0,
@@ -97,7 +97,7 @@ class Activity extends Model
             'class_id' => $class_id,
             'requestment' => $requestment,
             'rename_format' => $rename_format,
-            'accept' => $accept,
+            'accept' => strtolower($accept),
             'start_time' => $start_time,
             'stop_time' => $stop_time,
         ];
@@ -123,16 +123,6 @@ class Activity extends Model
         ];
 
         return $activity->update($data);
-    }
-
-    // 访问器：是否在进行中
-    public function getIsActiveAttribute()
-    {
-        $now = time();
-        $start = strtotime($this->start_time);
-        $stop = strtotime($this->stop_time);
-
-        return $now >= $start && $now <= $stop;
     }
 
     public static function getClass($activity_id)
@@ -217,15 +207,21 @@ class Activity extends Model
         return $groupedActivities;
     }
 
-
-
+    // 获取可接受文件类型
+    public static function getAccept($activity_id): string
+    {
+        return self::query()
+            ->where('activity_id', $activity_id)
+            ->first()
+            ->accept;
+    }
 
     // 获取单活动信息用于填充表单
     public static function getInfo($activity_id)
     {
         return self::query()
             ->where('activity_id', $activity_id)
-            ->select('activity_id', 'name', 'title', 'start_time', 'stop_time', 'accept', 'class_id', 'rename_format', 'requestment')
+            ->select('activity_id', 'name', 'title', 'start_time', 'stop_time', 'accept', 'class_id', 'rename_format', 'requestment','status')
             ->first();
     }
 

@@ -59,9 +59,4 @@ class EditController extends Controller
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
-    //导出活动 TODO 
-    public function export(Request $request)
-    {
-        return ResponseTool::jsonResponse(0, 'success', null);
-    }
 }
