@@ -5,12 +5,13 @@ use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Activity\CreateController;
 use App\Http\Controllers\Activity\ListController;
 use App\Http\Controllers\Activity\EditController;
+use App\Http\Controllers\Todos\TodosController;
 
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('AdminAuth')->group(function () {
 
-    Route::prefix('activity')->group(function () {
+    Route::prefix('activity')->middleware('ActivityRefresh')->group(function () {
         Route::post('create', [CreateController::class, 'create']);
         Route::get('getList', [ListController::class, 'getList']);
         Route::get('getCount', [ListController::class, 'getCount']);
@@ -20,18 +21,25 @@ Route::middleware('AdminAuth')->group(function () {
         Route::post('edit', [EditController::class, 'edit']);
         Route::post('editTime', [EditController::class, 'editTime']);
         Route::post('delete', [EditController::class, 'delete']);
+        Route::post('export', [EditController::class, 'export']);
     });
 
     Route::prefix('class')->group(function () {
         Route::get('getList', [ClassController::class, 'getList']);
     });
 
-    Route::prefix('user')->group(function () {
+    Route::prefix('user')->middleware('ClassRefresh')->group(function () {
         Route::post('add', [UserController::class, 'add']);
         Route::post('edit', [UserController::class, 'edit']);
         Route::post('editPassword', [UserController::class, 'editPassword']);
         Route::get('getList', [UserController::class, 'getList']);
         Route::post('delete', [UserController::class, 'delete']);
         Route::get('getCount', [UserController::class, 'getCount']);
+    });
+
+    Route::prefix('todos')->group(function () {
+        Route::post('downloadAdmin', [TodosController::class, 'downloadAdmin']);
+        Route::post('deleteAdmin', [TodosController::class, 'deleteAdmin']);
+        Route::post('submitAdmin', [TodosController::class, 'submitAdmin']);
     });
 });

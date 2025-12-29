@@ -5,8 +5,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Activity extends Model
 {
@@ -137,11 +135,12 @@ class Activity extends Model
         return $now >= $start && $now <= $stop;
     }
 
-    public static function getClass($activity_id){
+    public static function getClass($activity_id)
+    {
         return self::query()
-        ->where('activity_id',$activity_id)
-        ->first()
-        ->class_id;
+            ->where('activity_id', $activity_id)
+            ->first()
+            ->class_id;
     }
 
     // TODO 鉴权
@@ -218,14 +217,16 @@ class Activity extends Model
         return $groupedActivities;
     }
 
+
+
+
     // 获取单活动信息用于填充表单
     public static function getInfo($activity_id)
     {
         return self::query()
             ->where('activity_id', $activity_id)
-            ->first()
-            ->select('name', 'title', 'start_time', 'stop_time', 'accept', 'class_id', 'rename_format', 'requestment')
-            ->get();
+            ->select('activity_id', 'name', 'title', 'start_time', 'stop_time', 'accept', 'class_id', 'rename_format', 'requestment')
+            ->first();
     }
 
     // 根据班级获取活动数量
@@ -239,14 +240,45 @@ class Activity extends Model
         return $query->count();
     }
 
-    // 查询作用域：进行中的活动
-    public function scopeInProgress($query)
+    // 根据班级获取正在进行的活动数量
+    public static function getTodosCountByClass(string $class_id)
     {
-        $now = date('Y-m-d H:i:s');
-        return $query->where('start_time', '<=', $now)
-            ->where('stop_time', '>=', $now)
+        $query = self::query()
+            ->where('class_id', $class_id)
             ->where('status', 1);
+        return $query->count();
     }
 
+    // 根据班级获取正在进行的活动数量
+    public static function getStartedTodosCountByClass(string $class_id)
+    {
+        $query = self::query()
+            ->where('class_id', $class_id)
+            ->where('status', 1)
+            ->orWhere('status', 2);
+        return $query->count();
+    }
 
+    // 更新活动
+    public static function updateActivityStatus()
+    {
+
+        $lastRunKey = 'update_activity_status_last_run';
+        $lastRun = cache()->get($lastRunKey);
+        if ($lastRun && (time() - $lastRun) < 60) {
+            return;
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        self::where('start_time', '<=', $now)
+            ->where('stop_time', '>=', $now)
+            ->update(['status' => 1]);
+
+        self::where('stop_time', '<', $now)
+            ->update(['status' => 2]);
+
+        self::where('start_time', '>', $now)
+            ->update(['status' => 0]);
+    }
 }

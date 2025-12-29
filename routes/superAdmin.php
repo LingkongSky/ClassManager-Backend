@@ -6,7 +6,7 @@ use App\Http\Controllers\Permission\GroupController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('SuperAdminAuth')->group(function () {
-    Route::prefix('class')->group(function () {
+    Route::prefix('class')->middleware('ClassRefresh')->group(function () {
         Route::post('add', [ClassController::class, 'add']);
         Route::post('delete', [ClassController::class, 'delete']);
         Route::get('get', [ClassController::class, 'get']);

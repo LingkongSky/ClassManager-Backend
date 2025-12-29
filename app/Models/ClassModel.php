@@ -94,8 +94,9 @@ class ClassModel extends Model
     }
 
     // 获取班级名称
-    public static function getClassName($class_id){
-        return self::query()->where('class_id',$class_id)->first()->class_name;
+    public static function getClassName($class_id)
+    {
+        return self::query()->where('class_id', $class_id)->first()->class_name;
     }
 
     // 查询班级列表
@@ -146,7 +147,7 @@ class ClassModel extends Model
     // 获取所有班级
     public static function getAllClasses()
     {
-        return self::orderBy('class_id')->get(['class_id','class_name']);
+        return self::orderBy('class_id')->get(['class_id', 'class_name']);
     }
 
     // 修改班级信息
@@ -192,4 +193,23 @@ class ClassModel extends Model
         return $query->count();
     }
 
+    // 更新班级的学生数量
+    public static function updateClassStatus()
+    {
+
+        $lastRunKey = 'update_class_status_last_run';
+        $lastRun = cache()->get($lastRunKey);
+        if ($lastRun && (time() - $lastRun) < 60) {
+            return;
+        }
+
+        $classes = self::all();
+
+        foreach ($classes as $class) {
+            $class->student_count = Student::query()
+                ->where('class_id', $class->class_id)
+                ->count();
+            $class->save();
+        }
+    }
 }

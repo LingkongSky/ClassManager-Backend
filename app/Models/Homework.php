@@ -5,7 +5,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Homework extends Model
 {
@@ -93,27 +92,12 @@ class Homework extends Model
 
 
 
-    // 查询作用域：最新提交
-    public function scopeLatestSubmission($query)
-    {
-        return $query->orderBy('update_time', 'desc');
+    // 判断学生是否提交某作业
+    public static function hasSubmit($account,$activity_id){
+        return self::query()
+        ->where('activity_id',$activity_id)
+        ->where('account',$account)
+        ->exists();
     }
-
-    // 关系：作业属于一个学生
-    public function student(): BelongsTo
-    {
-        return $this->belongsTo(Student::class, 'account', 'account');
-    }
-
-    // 关系：作业属于一个活动
-    public function activity(): BelongsTo
-    {
-        return $this->belongsTo(Activity::class, 'activity_id', 'activity_id');
-    }
-
-    // 关系：作业属于一个班级
-    public function class(): BelongsTo
-    {
-        return $this->belongsTo(ClassModel::class, 'class_id', 'class_id');
-    }
+    
 }

@@ -9,6 +9,7 @@ use App\Http\Requests\Activity\EditTimeRequest;
 use App\Http\Requests\Activity\GetInfoRequest;
 use App\Models\Activity;
 use App\Utils\ResponseTool;
+use App\Http\Requests\Request;
 
 class EditController extends Controller
 {
@@ -47,14 +48,20 @@ class EditController extends Controller
     public function getInfo(GetInfoRequest $request)
     {
         $data = Activity::getInfo($request->input('activity_id'));
-        $data[0]['files'] = [];
-        return ResponseTool::jsonResponse(0, 'success', $data[0]);
+        $data['files'] = [];
+        return ResponseTool::jsonResponse(0, 'success', $data);
     }
 
     //删除活动 TODO 鉴权
     public function delete(DeleteRequest $request)
     {
         Activity::query()->where('activity_id', $request->input('activity_id'))->first()->delete();
+        return ResponseTool::jsonResponse(0, 'success', null);
+    }
+
+    //导出活动 TODO 
+    public function export(Request $request)
+    {
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 }

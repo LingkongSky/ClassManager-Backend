@@ -64,7 +64,7 @@ class Student extends Authenticatable
         return hash_hmac("sha256", $password, config('app.password_sign'));
     }
 
-
+    // 创建学生
     public function createStudent(
         string $account,
         string $name,
@@ -344,7 +344,7 @@ class Student extends Authenticatable
         $user->save();
     }
 
-    
+
     // 修改管理员
     public static function editAdmin(string $account, string $name, ?string $class_id, string $permission_group_id)
     {
@@ -486,5 +486,26 @@ class Student extends Authenticatable
                 'message' => '设置管理员错误: ' . $e->getMessage()
             ];
         }
+    }
+
+
+    // 获取待办
+    public function getTodos()
+    {
+        return Activity::query()
+            ->where('class_id', $this->class_id)
+            ->where('status', 1)
+            ->limit(50)
+            ->get();
+    }
+
+    // 获取已开始
+    public function getStarted()
+    {
+        return Activity::query()
+            ->where('class_id', $this->class_id)
+            ->whereIn('status', [1, 2])
+            ->limit(50)
+            ->get();
     }
 }
