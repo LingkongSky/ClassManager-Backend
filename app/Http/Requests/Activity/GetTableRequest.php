@@ -3,9 +3,16 @@
 namespace App\Http\Requests\Activity;
 
 use App\Http\Requests\Request;
+use App\Utils\RequestTool;
 
 class GetTableRequest extends Request
 {
+    public function authorize()
+    {
+        $class_id = RequestTool::xxs($this->input('class_id'));
+        return $this->user()->isClassInPermisssion($class_id);
+    }
+
     public function rules(): array
     {
         return [

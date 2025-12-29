@@ -3,9 +3,18 @@
 namespace App\Http\Requests\Activity;
 
 use App\Http\Requests\Request;
+use App\Models\Activity;
+use App\Utils\RequestTool;
 
 class DeleteRequest extends Request
 {
+
+    public function authorize()
+    {
+        $activity_id = RequestTool::xxs($this->input('activity_id'));
+        return $this->user()->isClassInPermisssion(Activity::getClass($activity_id));
+    }
+
     public function rules(): array
     {
         return [

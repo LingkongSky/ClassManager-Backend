@@ -22,7 +22,7 @@ class EditController extends Controller
         $file_upload = $request->input('file_upload');
         $name = $request->input('name');
         $title = $request->input('title');
-        $class_id = $request->input('class_id');
+        $class_id = Activity::getClass($activity_id);
         $requestment = $request->input('requestment');
         $rename_format = $request->input('rename_format');
         $accept = $request->input('accept');
@@ -44,7 +44,7 @@ class EditController extends Controller
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
-    // 获取单活动详情用于填充表单 TODO 活动鉴权
+    // 获取单活动详情用于填充表单
     public function getInfo(GetInfoRequest $request)
     {
         $data = Activity::getInfo($request->input('activity_id'));
@@ -52,7 +52,7 @@ class EditController extends Controller
         return ResponseTool::jsonResponse(0, 'success', $data);
     }
 
-    //删除活动 TODO 鉴权
+    //删除活动
     public function delete(DeleteRequest $request)
     {
         Activity::query()->where('activity_id', $request->input('activity_id'))->first()->delete();

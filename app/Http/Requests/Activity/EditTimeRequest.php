@@ -2,10 +2,17 @@
 
 namespace App\Http\Requests\Activity;
 
+use App\Utils\RequestTool;
 use App\Http\Requests\Request;
+use App\Models\Activity;
 
 class EditTimeRequest extends Request
 {
+    public function authorize()
+    {
+        $activity_id = RequestTool::xxs($this->input('activity_id'));
+        return $this->user()->isClassInPermisssion(Activity::getClass($activity_id));
+    }
 
     public function rules(): array
     {

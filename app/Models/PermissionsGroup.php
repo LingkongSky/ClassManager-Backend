@@ -68,7 +68,7 @@ class PermissionsGroup extends Model
     }
 
     // 检查是否包含某个目标
-    public function hasTarget($target)
+    public function hasTarget($target): bool
     {
         $targets = $this->getPermissionTarget();
         return in_array($target, $targets);

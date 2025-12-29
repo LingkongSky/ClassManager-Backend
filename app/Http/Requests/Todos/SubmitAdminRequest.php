@@ -8,6 +8,13 @@ use App\Utils\RequestTool;
 
 class SubmitAdminRequest extends Request
 {
+
+    public function authorize()
+    {
+        $activity_id = RequestTool::xxs($this->input('activity_id'));
+        return $this->user()->isClassInPermisssion(Activity::getClass($activity_id));
+    }
+
     public function rules(): array
     {
         $rules = [

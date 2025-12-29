@@ -9,17 +9,12 @@ class CreateRequest extends Request
 {
 
     // TODO 处理文件校验 存放与转移
-/*
-    // 在此班级进行鉴权
     public function authorize()
     {
-        // 先获取用户的权限班级
-        $user = $this->user();
-
-        // 再判断class_id中是否所有的班级都在权限班级中
-        return $user->isClassInPermisssion(RequestTool::xxs($this->input("class_id")));
+        $class_id = RequestTool::xxs($this->input('class_id'));
+        return $this->user()->isClassInPermisssion($class_id);
     }
-*/
+    
     public function rules(): array
     {
         return [

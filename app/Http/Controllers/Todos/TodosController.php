@@ -100,7 +100,7 @@ class TodosController extends Controller
     }
 
 
-    // 打开活动 TODO 鉴权
+    // 打开活动
     public function open(OpenRequest $request)
     {
         $data = Activity::getInfo($request->input('activity_id'));
@@ -116,11 +116,6 @@ class TodosController extends Controller
 
         // 判断活动状态是否为1
         if ($activity->status != 1) {
-            return ResponseTool::jsonResponse(1, 'failed', null);
-        }
-
-        // 判断学生是否与活动处于同一班级
-        if ($activity->class_id != $request->user()->class_id) {
             return ResponseTool::jsonResponse(1, 'failed', null);
         }
 
@@ -151,11 +146,6 @@ class TodosController extends Controller
 
         // 判断学生是否与活动处于同一班级
         if ($activity->class_id != Student::getUserClass($targetAccount)) {
-            return ResponseTool::jsonResponse(1, 'failed', null);
-        }
-
-        // 判断当前账号是否有活动权限
-        if (!$request->user()->isClassInPermisssion($activity->class_id)) {
             return ResponseTool::jsonResponse(1, 'failed', null);
         }
 
@@ -215,11 +205,6 @@ class TodosController extends Controller
         $activity = Activity::getInfo($request->input('activity_id'));
         $targetAccount = $request->input('target_account');
 
-        // 判断当前账号是否有活动权限
-        if (!$request->user()->isClassInPermisssion($activity->class_id)) {
-            return ResponseTool::jsonResponse(1, 'failed', null);
-        }
-
         // 判断是否已提交
         $homework = Homework::getSubmitInfo($targetAccount, $activity->activity_id);
         if (!$homework) {
@@ -265,11 +250,6 @@ class TodosController extends Controller
     public function downloadAdmin(DownloadAdminRequest $request) {
         $activity = Activity::getInfo($request->input('activity_id'));
         $targetAccount = $request->input('target_account');
-
-        // 判断当前账号是否有活动权限
-        if (!$request->user()->isClassInPermisssion($activity->class_id)) {
-            return ResponseTool::jsonResponse(1, 'failed', null);
-        }
 
         // 检测是否提交
         $homework = Homework::getSubmitInfo($targetAccount, $activity->activity_id);

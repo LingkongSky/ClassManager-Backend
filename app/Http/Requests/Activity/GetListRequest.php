@@ -3,9 +3,18 @@
 namespace App\Http\Requests\Activity;
 
 use App\Http\Requests\Request;
+use App\Utils\RequestTool;
+use App\Models\Activity;
 
 class GetListRequest extends Request
 {
+
+    public function authorize()
+    {
+        $class_id = RequestTool::xxs($this->input('class_id'));
+        return $this->user()->isClassInPermisssion($class_id);
+    }
+
     public function rules(): array
     {
         return [
@@ -19,5 +28,4 @@ class GetListRequest extends Request
             'class_id.required' => '班级ID不能为空',
         ];
     }
-
 }

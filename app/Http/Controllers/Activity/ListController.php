@@ -26,9 +26,6 @@ class ListController extends Controller
     // 获取活动数量
     public function getCount(GetCountRequest $request)
     {
-        if (!$request->user()->isClassInPermisssion($request->input("class_id"))) {
-            return ResponseTool::jsonResponse(1, 'failed', null);
-        }
         $count = Activity::getCountByClass($request->input("class_id"), $request->input("query_word"));
         return ResponseTool::jsonResponse(0, 'success', $count);
     }
@@ -39,10 +36,6 @@ class ListController extends Controller
         $queryCount = $request->input('query_count');
         $queryWord = $request->input('query_word');
         $classId = $request->input('class_id');
-
-        if (!$request->user()->isClassInPermisssion($classId)) {
-            return ResponseTool::jsonResponse(1, 'failed', null);
-        }
 
         $activity = Activity::getTableByClass(
             $classId,
@@ -74,11 +67,6 @@ class ListController extends Controller
         $activityId = $request->input('activity_id');
         $sortMode = $request->input('sort_mode');
         $sortField = $request->input('sort_field');
-
-        // 判断当前账号是否有活动权限
-        if (!$request->user()->isClassInPermisssion(Activity::getClass($activityId))) {
-            return ResponseTool::jsonResponse(1, 'failed', null);
-        }
 
         if (!is_null($sortMode) && !is_null($sortField)) {
             $users = Homework::getTableByActivityWithSort($activityId, $queryWord, $queryCount,  $sortMode, $sortField);
@@ -118,12 +106,6 @@ class ListController extends Controller
 
         $activity = Activity::getInfo($request->input('activity_id'));
         $times = $request->input('times');
-
-        // 判断当前账号是否有活动权限
-        if (!$request->user()->isClassInPermisssion($activity->class_id)) {
-            return ResponseTool::jsonResponse(1, 'failed', null);
-        }
-
 
         $path = "";
 

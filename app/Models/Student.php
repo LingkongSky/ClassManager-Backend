@@ -203,18 +203,21 @@ class Student extends Authenticatable
     // 获取管理员的所属班级
     public function getStudentPermissionClass()
     {
+        $allClass = [];
         if ($this->level == 10) {
-            return ClassModel::getAllClasses();
+            $allClass = ClassModel::getAllClasses();
         } else {
-
             $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
-
             if (!$permissionsGroup) {
-                return null;
+                return [];
             }
 
-            return $permissionsGroup->getPermissionTarget();
+            $class_list = $permissionsGroup->getPermissionTarget();
+            foreach ($class_list as $class_id) {
+                array_push($allClass, ClassModel::query()->where('class_id', $class_id)->first());
+            }
         }
+        return $allClass;
     }
 
     // 根据班级查询学生
@@ -278,7 +281,8 @@ class Student extends Authenticatable
     }
 
     // 获取学生名字
-    public static function getName($account){
+    public static function getName($account)
+    {
         return self::query()->where('account', $account)->first()->name;
     }
 

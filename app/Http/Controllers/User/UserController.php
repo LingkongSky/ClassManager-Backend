@@ -42,8 +42,6 @@ class UserController extends Controller
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
-
-
     // 获取班级列表
     public function getList(GetListRequest $request)
     {
