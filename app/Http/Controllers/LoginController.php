@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Models\Student;
+use App\Models\LoginLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use App\Utils\ResponseTool;
 use Illuminate\Http\Request;
@@ -41,6 +41,8 @@ class LoginController extends Controller
             $tokenResult = $student->createTokenWithExpiry($request->input('account'), $remember);
 
             $expiresAt = $tokenResult->accessToken->expires_at;
+
+            LoginLog::log($request->input('account'), $request->ip());
 
             return ResponseTool::jsonResponse(0, '登录成功', [
                 'token' => $tokenResult->plainTextToken,
@@ -76,7 +78,7 @@ class LoginController extends Controller
     }
 
     // 登出
-    public function logout(Request $request): JsonResponse
+    public function logout(): JsonResponse
     {
         return ResponseTool::jsonResponse(0, 'success', null);
     }
@@ -85,25 +87,5 @@ class LoginController extends Controller
     public function getUserCount(): JsonResponse
     {
         return ResponseTool::jsonResponse(0, 'success', Student::getStudentCount());
-    }
-
-    // 登陆失败风控
-    private function handleFailedLogin(LoginRequest $request): void
-    {
-        $throttleKey = Str::transliterate(
-            Str::lower($request->input('account')) . '|' . $request->ip()
-        );
-
-        RateLimiter::hit($throttleKey, 60);
-    }
-
-    // 登录通过 清除风控
-    private function clearLoginAttempts(LoginRequest $request): void
-    {
-        $throttleKey = Str::transliterate(
-            Str::lower($request->input('account')) . '|' . $request->ip()
-        );
-
-        RateLimiter::clear($throttleKey);
     }
 }

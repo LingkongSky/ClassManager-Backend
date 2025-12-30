@@ -5,7 +5,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DownloadLog extends Model
 {
@@ -29,22 +28,15 @@ class DownloadLog extends Model
         'status' => 'integer',
     ];
 
-
-    // 查询作用域：成功的下载
-    public function scopeSuccessful($query)
+    public static function log($account, $fileName, $type, $status, $ip)
     {
-        return $query->where('status', 1);
-    }
-
-    // 查询作用域：按文件类型筛选
-    public function scopeByFileType($query, $type)
-    {
-        return $query->where('type', $type);
-    }
-
-    // 关系：下载日志属于一个学生
-    public function student(): BelongsTo
-    {
-        return $this->belongsTo(Student::class, 'account', 'account');
+        return self::create([
+            'account' => $account,
+            'file_name' => $fileName,
+            'type' => $type,
+            'status' => $status,
+            'ip' => $ip,
+            'time' => now(),
+        ]);
     }
 }

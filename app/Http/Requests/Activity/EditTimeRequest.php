@@ -18,8 +18,8 @@ class EditTimeRequest extends Request
     {
         return [
             'activity_id' => 'required|string|max:255',
-            'start_time' => 'required|string|max:50',
-            'stop_time' => 'required|string|max:50',
+            'start_time' => 'required|string|max:50|date_format:Y-m-d H:i:s',
+            'stop_time' => 'required|string|max:50|date_format:Y-m-d H:i:s|after:start_time',
         ];
     }
 

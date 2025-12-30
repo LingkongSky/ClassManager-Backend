@@ -199,7 +199,7 @@ class ClassModel extends Model
 
         $lastRunKey = 'update_class_status_last_run';
         $lastRun = cache()->get($lastRunKey);
-        if ($lastRun && (time() - $lastRun) < 60) {
+        if ($lastRun && (time() - $lastRun) < 30) {
             return;
         }
 

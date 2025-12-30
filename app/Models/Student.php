@@ -190,6 +190,10 @@ class Student extends Authenticatable
     // 判断传入的class_id是否在用户的权限组里
     public function isClassInPermisssion($classId): bool
     {
+        if ($this->level == 10) {
+            return true;
+        }
+
         $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
 
         if (!$permissionsGroup) {

@@ -11,7 +11,7 @@ class OpenRequest extends Request
     public function authorize()
     {
         $activityId = RequestTool::xxs($this->input('activity_id'));
-        return ($this->user()->class_id == Activity::getClass($activityId));
+        return ($this->user()->class_id == Activity::getClass($activityId)) || $this->user()->isClassInPermisssion(Activity::getClass($activityId));
     }
 
     public function rules(): array

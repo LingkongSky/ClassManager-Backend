@@ -5,6 +5,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\ActivityLog;
 
 class Activity extends Model
 {
@@ -47,8 +48,8 @@ class Activity extends Model
         string $renameFormat,
         string $accept,
         string $startTime,
-        string $stopTime
-    ): self {
+        string $stopTime,
+    ) {
 
         $activityId = time() + rand(0, 9999);
 
@@ -70,7 +71,7 @@ class Activity extends Model
         $activity->fill($data);
         $activity->save();
 
-        return $activity;
+        return $activityId;
     }
 
     // 编辑活动
@@ -221,7 +222,7 @@ class Activity extends Model
     {
         return self::query()
             ->where('activity_id', $activityId)
-            ->select('activity_id', 'name', 'title', 'start_time', 'stop_time', 'accept', 'class_id', 'rename_format', 'requestment','status')
+            ->select('activity_id', 'name', 'title', 'start_time', 'stop_time', 'accept', 'class_id', 'rename_format', 'requestment', 'status')
             ->first();
     }
 
@@ -261,7 +262,7 @@ class Activity extends Model
 
         $lastRunKey = 'update_activity_status_last_run';
         $lastRun = cache()->get($lastRunKey);
-        if ($lastRun && (time() - $lastRun) < 60) {
+        if ($lastRun && (time() - $lastRun) < 30) {
             return;
         }
 
@@ -269,12 +270,15 @@ class Activity extends Model
 
         self::where('start_time', '<=', $now)
             ->where('stop_time', '>=', $now)
+            ->where('status', '!=', 1)
             ->update(['status' => 1]);
 
         self::where('stop_time', '<', $now)
+            ->where('status', '!=', 2)
             ->update(['status' => 2]);
 
         self::where('start_time', '>', $now)
+            ->where('status', '!=', 0)
             ->update(['status' => 0]);
     }
 }

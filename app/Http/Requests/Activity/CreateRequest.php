@@ -24,8 +24,8 @@ class CreateRequest extends Request
             'requestment' => 'required|string|max:4096',
             'rename_format' => 'required|string|max:100',
             'accept' => 'required|string|max:255',
-            'start_time' => 'required|string|max:50',
-            'stop_time' => 'required|string|max:50',
+            'start_time' => 'required|string|max:50|date_format:Y-m-d H:i:s',
+            'stop_time' => 'required|string|max:50|date_format:Y-m-d H:i:s|after:start_time',
         ];
     }
 

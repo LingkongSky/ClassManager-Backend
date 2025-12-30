@@ -5,7 +5,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class HomeworkLog extends Model
 {
@@ -20,7 +19,8 @@ class HomeworkLog extends Model
         'class_id',
         'activity_id',
         'update_time',
-        'ip'
+        'event',
+        'ip',
     ];
 
     protected $casts = [
@@ -28,27 +28,16 @@ class HomeworkLog extends Model
         'update_time' => 'datetime',
     ];
 
-    // 访问器：格式化IP地址
-    public function getFormattedIpAttribute()
+    public static function log($account, $fileName, $classId, $activityId,  $event, $ip)
     {
-        return long2ip($this->ip) ?: $this->ip;
-    }
-
-    // 查询作用域：按时间段筛选
-    public function scopeBetweenDates($query, $start, $end)
-    {
-        return $query->whereBetween('update_time', [$start, $end]);
-    }
-
-    // 关系：日志属于一个学生
-    public function student(): BelongsTo
-    {
-        return $this->belongsTo(Student::class, 'account', 'account');
-    }
-
-    // 关系：日志属于一个活动
-    public function activity(): BelongsTo
-    {
-        return $this->belongsTo(Activity::class, 'activity_id', 'activity_id');
+        return self::create([
+            'account' => $account,
+            'file_name' => $fileName,
+            'class_id' => $classId,
+            'activity_id' => $activityId,
+            'event' => $event,
+            'ip' => $ip,
+            'update_time' => now(),
+        ]);
     }
 }

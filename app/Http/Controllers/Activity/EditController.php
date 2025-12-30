@@ -8,13 +8,39 @@ use App\Http\Requests\Activity\EditRequest;
 use App\Http\Requests\Activity\EditTimeRequest;
 use App\Http\Requests\Activity\GetInfoRequest;
 use App\Models\Activity;
+use App\Models\ActivityLog;
 use App\Utils\ResponseTool;
-use App\Http\Requests\Request;
+use App\Http\Requests\Activity\CreateRequest;
+
 
 class EditController extends Controller
 {
     // TODO 处理文件校验 存放与转移
+    //创建活动
+    public function create(CreateRequest $request)
+    {
+        $name = $request->input('name');
+        $title = $request->input('title');
+        $classId = $request->input('class_id');
+        $requestment = $request->input('requestment');
+        $renameFormat = $request->input('rename_format');
+        $accept = $request->input('accept');
+        $startTime = $request->input('start_time');
+        $stopTime = $request->input('stop_time');
 
+        $activityId = Activity::create($name, $title, $classId, $requestment, $renameFormat, $accept, $startTime, $stopTime);
+
+        ActivityLog::log(
+            $request->user()->account,
+            $activityId,
+            "create",
+            $request->ip()
+        );
+
+        return ResponseTool::jsonResponse(0, 'success', null);
+    }
+
+    // TODO 处理文件校验 存放与转移
     // 编辑活动
     public function edit(EditRequest $request)
     {
@@ -30,6 +56,14 @@ class EditController extends Controller
         $stopTime = $request->input('stop_time');
 
         Activity::edit($activityId, $name, $title, $classId, $requestment, $renameFormat, $accept, $startTime, $stopTime, $fileUpload);
+
+        ActivityLog::log(
+            $request->user()->account,
+            $activityId,
+            "edit",
+            $request->ip()
+        );
+
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
@@ -41,6 +75,14 @@ class EditController extends Controller
         $stopTime = $request->input('stop_time');
 
         Activity::editTime($activityId, $startTime, $stopTime);
+
+        ActivityLog::log(
+            $request->user()->account,
+            $activityId,
+            "edit",
+            $request->ip()
+        );
+
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
@@ -55,8 +97,17 @@ class EditController extends Controller
     //删除活动
     public function delete(DeleteRequest $request)
     {
-        Activity::query()->where('activity_id', $request->input('activity_id'))->first()->delete();
+        $activityId = $request->input('activity_id');
+
+        Activity::query()->where('activity_id', $activityId)->first()->delete();
+
+        ActivityLog::log(
+            $request->user()->account,
+            $activityId,
+            "deleteedit",
+            $request->ip()
+        );
+
         return ResponseTool::jsonResponse(0, 'success', null);
     }
-
 }

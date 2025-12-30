@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Class\ClassController;
 use App\Http\Controllers\User\UserController;
-use App\Http\Controllers\Activity\CreateController;
 use App\Http\Controllers\Activity\ListController;
 use App\Http\Controllers\Activity\EditController;
 use App\Http\Controllers\Todos\TodosController;
@@ -12,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('AdminAuth')->group(function () {
 
     Route::prefix('activity')->middleware('ActivityRefresh')->group(function () {
-        Route::post('create', [CreateController::class, 'create']);
+        Route::post('create', [EditController::class, 'create']);
         Route::get('getList', [ListController::class, 'getList']);
         Route::get('getCount', [ListController::class, 'getCount']);
         Route::get('getInfo', [EditController::class, 'getInfo']);

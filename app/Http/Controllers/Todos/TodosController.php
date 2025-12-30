@@ -7,6 +7,7 @@ use App\Http\Requests\Request;
 use App\Models\Homework;
 use App\Models\Activity;
 use App\Models\ClassModel;
+use App\Models\HomeworkLog;
 use App\Models\Student;
 use App\Http\Requests\Todos\OpenRequest;
 use App\Http\Requests\Todos\GetStartedRequest;
@@ -16,6 +17,7 @@ use App\Http\Requests\Todos\DeleteRequest;
 use App\Http\Requests\Todos\DeleteAdminRequest;
 use App\Http\Requests\Todos\DownloadRequest;
 use App\Http\Requests\Todos\DownloadAdminRequest;
+use App\Models\DownloadLog;
 use App\Utils\ResponseTool;
 use Illuminate\Support\Facades\Storage;
 
@@ -99,7 +101,6 @@ class TodosController extends Controller
         return ResponseTool::jsonResponse(0, 'success', $count);
     }
 
-
     // 打开活动
     public function open(OpenRequest $request)
     {
@@ -134,6 +135,8 @@ class TodosController extends Controller
             'activity'
         );
 
+        HomeworkLog::log($request->user()->account,$newName,$activity->class_id,$request->input('activity_id'),'submit',$request->ip());
+
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
@@ -165,6 +168,8 @@ class TodosController extends Controller
             'activity'
         );
 
+        HomeworkLog::log($request->user()->account,$newName,$activity->class_id,$request->input('activity_id'),"Admin submit {$targetAccount}",$request->ip());
+
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
@@ -195,6 +200,8 @@ class TodosController extends Controller
         // 删除提交
         Homework::deleteSubmit($request->user()->account, $activity->activity_id);
 
+        HomeworkLog::log($request->user()->account,$homework->file_name,$activity->class_id,$request->input('activity_id'),'delete',$request->ip());
+
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
@@ -222,6 +229,8 @@ class TodosController extends Controller
         // 删除提交
         Homework::deleteSubmit($targetAccount, $activity->activity_id);
 
+        HomeworkLog::log($request->user()->account,$homework->file_name,$activity->class_id,$request->input('activity_id'),"Admin delete {$targetAccount}",$request->ip());
+
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
@@ -244,6 +253,8 @@ class TodosController extends Controller
 
         $filePath = "/download/homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
 
+        DownloadLog::log($request->user()->account, $homework->file_name,'publish' ,'successful' ,$request->ip());
+
         return ResponseTool::jsonResponse(0, 'success', $filePath);
     }
 
@@ -260,6 +271,8 @@ class TodosController extends Controller
         }
 
         $filePath = "/download/homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
+
+        DownloadLog::log($request->user()->account, $homework->file_name,'publish' ,'successful' ,$request->ip());
 
         return ResponseTool::jsonResponse(0, 'success', $filePath);
     }
