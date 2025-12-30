@@ -18,8 +18,8 @@ class UserController extends Controller
     // 添加学生
     public function add(AddRequest $request)
     {
-        $student_list = $request->input("data");
-        foreach ($student_list as $item) {
+        $studentList = $request->input("data");
+        foreach ($studentList as $item) {
             $request->user()->createStudent(
                 $item['account'],
                 $item['name'],
@@ -33,9 +33,9 @@ class UserController extends Controller
     // 删除学生
     public function delete(DeleteRequest $request)
     {
-        $student_list = $request->input("student_list");
+        $studentList = $request->input("student_list");
 
-        foreach ($student_list as $item) {
+        foreach ($studentList as $item) {
             $request->user()->deleteByAccount($item);
         }
 
@@ -55,7 +55,7 @@ class UserController extends Controller
             $queryCount
         );
 
-        $all_user = [];
+        $allUser = [];
         foreach ($users as $item) {
             $userData = array(
                 'name' => $item->name,
@@ -63,9 +63,9 @@ class UserController extends Controller
                 'class_id' => $item->class_id,
                 'class_name' => ClassModel::getClassName($item->class_id),
             );
-            array_push($all_user, $userData);
+            array_push($allUser, $userData);
         }
-        return ResponseTool::jsonResponse(0, 'success', $all_user);
+        return ResponseTool::jsonResponse(0, 'success', $allUser);
     }
 
     // 修改用户

@@ -31,7 +31,7 @@ class TodosController extends Controller
         $todos = $request->user()->getTodos();
         $account = $request->user()->account;
 
-        $all_todos = [];
+        $allTodos = [];
         foreach ($todos as $item) {
             $todosData = array(
                 'activity_id' => $item->activity_id,
@@ -43,9 +43,9 @@ class TodosController extends Controller
                 'is_finished' => Homework::hasSubmit($account, $item->activity_id)
             );
 
-            array_push($all_todos, $todosData);
+            array_push($allTodos, $todosData);
         }
-        return ResponseTool::jsonResponse(0, 'success', $all_todos);
+        return ResponseTool::jsonResponse(0, 'success', $allTodos);
     }
 
     // 获取活动数量
@@ -70,7 +70,7 @@ class TodosController extends Controller
         $todos = $request->user()->GetStarted();
         $account = $request->user()->account;
 
-        $all_todos = [];
+        $allTodos = [];
         foreach ($todos as $item) {
             $todosData = array(
                 'activity_id' => $item->activity_id,
@@ -83,9 +83,9 @@ class TodosController extends Controller
                 'is_finished' => Homework::hasSubmit($account, $item->activity_id)
             );
 
-            array_push($all_todos, $todosData);
+            array_push($allTodos, $todosData);
         }
-        return ResponseTool::jsonResponse(0, 'success', $all_todos);
+        return ResponseTool::jsonResponse(0, 'success', $allTodos);
     }
 
     // 获取已开始的活动数量
@@ -186,12 +186,12 @@ class TodosController extends Controller
 
         // 删除文件
         $filePath = "homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
-        
+
         $storage = Storage::disk('activity');
         if ($storage->exists($filePath)) {
             $storage->delete($filePath);
         }
-    
+
         // 删除提交
         Homework::deleteSubmit($request->user()->account, $activity->activity_id);
 
@@ -213,7 +213,7 @@ class TodosController extends Controller
 
         // 删除文件
         $filePath = "homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
-        
+
         $storage = Storage::disk('activity');
         if ($storage->exists($filePath)) {
             $storage->delete($filePath);
@@ -226,7 +226,8 @@ class TodosController extends Controller
     }
 
     // 下载作业
-    public function download(DownloadRequest $request) {
+    public function download(DownloadRequest $request)
+    {
 
         $activity = Activity::getInfo($request->input('activity_id'));
 
@@ -247,7 +248,8 @@ class TodosController extends Controller
     }
 
     // 管理员下载作业
-    public function downloadAdmin(DownloadAdminRequest $request) {
+    public function downloadAdmin(DownloadAdminRequest $request)
+    {
         $activity = Activity::getInfo($request->input('activity_id'));
         $targetAccount = $request->input('target_account');
 

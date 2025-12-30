@@ -11,8 +11,8 @@ class DeleteAdminRequest extends Request
 
     public function authorize()
     {
-        $activity_id = RequestTool::xxs($this->input('activity_id'));
-        return $this->user()->isClassInPermisssion(Activity::getClass($activity_id));
+        $activityId = RequestTool::xxs($this->input('activity_id'));
+        return $this->user()->isClassInPermisssion(Activity::getClass($activityId));
     }
 
 

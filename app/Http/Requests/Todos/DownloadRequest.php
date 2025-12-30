@@ -10,8 +10,8 @@ class DownloadRequest extends Request
 {
     public function authorize()
     {
-        $activity_id = RequestTool::xxs($this->input('activity_id'));
-        return ($this->user()->class_id == Activity::getClass($activity_id));
+        $activityId = RequestTool::xxs($this->input('activity_id'));
+        return ($this->user()->class_id == Activity::getClass($activityId));
     }
 
     public function rules(): array

@@ -18,10 +18,10 @@ class GroupController extends Controller
     // 创建权限组
     public function addGroup(AddGroupRequest $request)
     {
-        $permissions_group_list = $request->input("permissions_group_list");
+        $permissionsGroupList = $request->input("permissions_group_list");
         $i = 0;
 
-        foreach ($permissions_group_list as $item) {
+        foreach ($permissionsGroupList as $item) {
             $time = time() . $i;
             PermissionsGroup::addGroup($time, $item["name"], $item["target"]);
         }
@@ -32,9 +32,9 @@ class GroupController extends Controller
     // 删除权限组
     public function deleteGroup(DeleteGroupRequest $request)
     {
-        $permissions_group_list = $request->input("permissions_group_list");
+        $permissionsGroupList = $request->input("permissions_group_list");
 
-        foreach ($permissions_group_list as $item) {
+        foreach ($permissionsGroupList as $item) {
             PermissionsGroup::deleteGroup($item);
         }
 
@@ -59,7 +59,7 @@ class GroupController extends Controller
         $queryCount = $request->input('query_count');
         $queryWord = $request->input('query_word');
 
-        $all_groups = [];
+        $allGroups = [];
 
         $groups = PermissionsGroup::getGroupList($queryCount, $queryWord);
 
@@ -67,22 +67,22 @@ class GroupController extends Controller
         foreach ($groups as $group) {
 
             // 生成班级名称
-            $class_id_array = explode("|", $group->target);
-            $class_list = "";
-            foreach ($class_id_array as $class_id) {
-                $class_list = $class_list . " " . ClassModel::getClassName($class_id);
+            $classIdArray = explode("|", $group->target);
+            $classList = "";
+            foreach ($classIdArray as $classId) {
+                $classList = $classList . " " . ClassModel::getClassName($classId);
             }
 
             $groupData = array(
                 'name' => $group->name,
                 'group_id' => $group->group_id,
                 'class_id_list' => $group->target,
-                'class_name_list' => $class_list,
+                'class_name_list' => $classList,
             );
 
-            array_push($all_groups, $groupData);
+            array_push($allGroups, $groupData);
         }
-        return ResponseTool::jsonResponse(0, 'success', $all_groups);
+        return ResponseTool::jsonResponse(0, 'success', $allGroups);
     }
 
 

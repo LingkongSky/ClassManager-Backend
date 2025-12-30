@@ -42,26 +42,26 @@ class Activity extends Model
     public static function create(
         string $name,
         string $title,
-        string $class_id,
+        string $classId,
         string $requestment,
-        string $rename_format,
+        string $renameFormat,
         string $accept,
-        string $start_time,
-        string $stop_time
+        string $startTime,
+        string $stopTime
     ): self {
 
-        $activity_id = time() + rand(0, 9999);
+        $activityId = time() + rand(0, 9999);
 
         $data = [
-            'activity_id' => $activity_id,
+            'activity_id' => $activityId,
             'name' => $name,
             'title' => $title,
-            'class_id' => $class_id,
+            'class_id' => $classId,
             'requestment' => $requestment,
-            'rename_format' => $rename_format,
+            'rename_format' => $renameFormat,
             'accept' => strtolower($accept),
-            'start_time' => $start_time,
-            'stop_time' => $stop_time,
+            'start_time' => $startTime,
+            'stop_time' => $stopTime,
             'status' => 0,
             'type' => 0,
         ];
@@ -75,17 +75,17 @@ class Activity extends Model
 
     // 编辑活动
     public static function edit(
-        string $activity_id,
+        string $activityId,
         string $name,
         string $title,
-        string $class_id,
+        string $classId,
         string $requestment,
-        string $rename_format,
+        string $renameFormat,
         string $accept,
-        string $start_time,
-        string $stop_time,
+        string $startTime,
+        string $stopTime,
     ): bool {
-        $activity = self::where('activity_id', $activity_id)->first();
+        $activity = self::where('activity_id', $activityId)->first();
 
         if (!$activity) {
             return false;
@@ -94,12 +94,12 @@ class Activity extends Model
         $data = [
             'name' => $name,
             'title' => $title,
-            'class_id' => $class_id,
+            'class_id' => $classId,
             'requestment' => $requestment,
-            'rename_format' => $rename_format,
+            'rename_format' => $renameFormat,
             'accept' => strtolower($accept),
-            'start_time' => $start_time,
-            'stop_time' => $stop_time,
+            'start_time' => $startTime,
+            'stop_time' => $stopTime,
         ];
 
         return $activity->update($data);
@@ -107,38 +107,38 @@ class Activity extends Model
 
     // 编辑活动时间
     public static function editTime(
-        string $activity_id,
-        string $start_time,
-        string $stop_time,
+        string $activityId,
+        string $startTime,
+        string $stopTime,
     ): bool {
-        $activity = self::where('activity_id', $activity_id)->first();
+        $activity = self::where('activity_id', $activityId)->first();
 
         if (!$activity) {
             return false;
         }
 
         $data = [
-            'start_time' => $start_time,
-            'stop_time' => $stop_time,
+            'start_time' => $startTime,
+            'stop_time' => $stopTime,
         ];
 
         return $activity->update($data);
     }
 
-    public static function getClass($activity_id)
+    public static function getClass($activityId)
     {
         return self::query()
-            ->where('activity_id', $activity_id)
+            ->where('activity_id', $activityId)
             ->first()
             ->class_id;
     }
 
     // TODO 鉴权
-    public static function getActivityProgress($activity_id)
+    public static function getActivityProgress($activityId)
     {
-        $activity = self::query()->where('activity_id', $activity_id)->first();
+        $activity = self::query()->where('activity_id', $activityId)->first();
         $allCount = Student::query()->where('class_id', $activity->class_id)->count();
-        $sumbitCount = Homework::query()->where('activity_id', $activity_id)->count();
+        $sumbitCount = Homework::query()->where('activity_id', $activityId)->count();
         return $sumbitCount . "/" . $allCount;
     }
 
@@ -155,10 +155,10 @@ class Activity extends Model
     }
 
     // 根据班级获取列表
-    public static function getListByClass($class_id)
+    public static function getListByClass($classId)
     {
         $query = self::query()
-            ->where('class_id', $class_id)
+            ->where('class_id', $classId)
             ->select('activity_id', 'name', 'status')
             ->limit(200)
             ->get();
@@ -208,48 +208,48 @@ class Activity extends Model
     }
 
     // 获取可接受文件类型
-    public static function getAccept($activity_id): string
+    public static function getAccept($activityId): string
     {
         return self::query()
-            ->where('activity_id', $activity_id)
+            ->where('activity_id', $activityId)
             ->first()
             ->accept;
     }
 
     // 获取单活动信息用于填充表单
-    public static function getInfo($activity_id)
+    public static function getInfo($activityId)
     {
         return self::query()
-            ->where('activity_id', $activity_id)
+            ->where('activity_id', $activityId)
             ->select('activity_id', 'name', 'title', 'start_time', 'stop_time', 'accept', 'class_id', 'rename_format', 'requestment','status')
             ->first();
     }
 
     // 根据班级获取活动数量
-    public static function getCountByClass(string $class_id, ?string $query_word = '')
+    public static function getCountByClass(string $classId, ?string $queryWord = '')
     {
-        $query = self::query()->where('class_id', $class_id);
-        if (!empty($query_word)) {
-            $query->where('name', 'like', '%' . $query_word . '%');
+        $query = self::query()->where('class_id', $classId);
+        if (!empty($queryWord)) {
+            $query->where('name', 'like', '%' . $queryWord . '%');
         }
 
         return $query->count();
     }
 
     // 根据班级获取正在进行的活动数量
-    public static function getTodosCountByClass(string $class_id)
+    public static function getTodosCountByClass(string $classId)
     {
         $query = self::query()
-            ->where('class_id', $class_id)
+            ->where('class_id', $classId)
             ->where('status', 1);
         return $query->count();
     }
 
     // 根据班级获取正在进行的活动数量
-    public static function getStartedTodosCountByClass(string $class_id)
+    public static function getStartedTodosCountByClass(string $classId)
     {
         $query = self::query()
-            ->where('class_id', $class_id)
+            ->where('class_id', $classId)
             ->where('status', 1)
             ->orWhere('status', 2);
         return $query->count();

@@ -29,15 +29,6 @@ class PermissionsGroup extends Model
         return explode('|', $this->target);
     }
 
-    // 设置目标
-    public function setTargetAttribute($value)
-    {
-        if (is_array($value)) {
-            $this->attributes['target'] = implode('|', $value);
-        } else {
-            $this->attributes['target'] = $value;
-        }
-    }
 
     // 添加权限组 TODO:对target进行拆分校验
     public static function addGroup(string $groupId, string $name, string $target)
@@ -75,9 +66,9 @@ class PermissionsGroup extends Model
     }
 
     // 根据权限组ID查询权限组名称
-    public static function getGroupName($group_id)
+    public static function getGroupName($groupId)
     {
-        return self::query()->where('group_id', $group_id)->first()->name;
+        return self::query()->where('group_id', $groupId)->first()->name;
     }
 
     // 获取所有权限组
@@ -123,26 +114,26 @@ class PermissionsGroup extends Model
     }
 
     // 查询所有权限组
-    public static function getGroupList($query_count = 0, $query_word = '', $limit = 20)
+    public static function getGroupList($queryCount = 0, $queryWord = '', $limit = 20)
     {
         $query = self::query();
 
-        if (!empty($query_word)) {
-            $query->where('name', 'like', '%' . $query_word . '%');
+        if (!empty($queryWord)) {
+            $query->where('name', 'like', '%' . $queryWord . '%');
         }
 
-        return $query->offset($query_count)
+        return $query->offset($queryCount)
             ->limit($limit)
             ->get();
     }
 
     // 获取权限组数量
-    public static function getGroupCount(?string $query_word = ''): int
+    public static function getGroupCount(?string $queryWord = ''): int
     {
         $query = self::query();
 
-        if (!empty($query_word)) {
-            $query->where('name', 'like', '%' . $query_word . '%');
+        if (!empty($queryWord)) {
+            $query->where('name', 'like', '%' . $queryWord . '%');
         }
 
         return $query->count();
@@ -150,23 +141,23 @@ class PermissionsGroup extends Model
 
 
     // 修改权限组
-    public static function editGroup(string $permissions_group_id, string $permissions_group_name, string $class_list)
+    public static function editGroup(string $permissionsGroupId, string $permissionsGroupName, string $classList)
     {
         try {
             // 查找对应的权限组
-            $permissions_group = PermissionsGroup::where('group_id', $permissions_group_id)
+            $permissionsGroup = PermissionsGroup::where('group_id', $permissionsGroupId)
                 ->first();
 
-            if (!$permissions_group) {
+            if (!$permissionsGroup) {
                 return [
                     'success' => false,
                     'message' => '权限组不存在'
                 ];
             }
 
-            $permissions_group->name = $permissions_group_name;
-            $permissions_group->target = $class_list;    
-            $permissions_group->save();
+            $permissionsGroup->name = $permissionsGroupName;
+            $permissionsGroup->target = $classList;    
+            $permissionsGroup->save();
 
             return [
                 'success' => true,

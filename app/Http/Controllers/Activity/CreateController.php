@@ -17,14 +17,14 @@ class CreateController extends Controller
     {
         $name = $request->input('name');
         $title = $request->input('title');
-        $class_id = $request->input('class_id');
+        $classId = $request->input('class_id');
         $requestment = $request->input('requestment');
-        $rename_format = $request->input('rename_format');
+        $renameFormat = $request->input('rename_format');
         $accept = $request->input('accept');
-        $start_time = $request->input('start_time');
-        $stop_time = $request->input('stop_time');
+        $startTime = $request->input('start_time');
+        $stopTime = $request->input('stop_time');
 
-        Activity::create($name, $title, $class_id, $requestment, $rename_format, $accept, $start_time, $stop_time);
+        Activity::create($name, $title, $classId, $requestment, $renameFormat, $accept, $startTime, $stopTime);
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 }

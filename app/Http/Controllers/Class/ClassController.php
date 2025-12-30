@@ -17,10 +17,10 @@ class ClassController extends Controller
     // 创建班级
     public function add(AddRequest $request)
     {
-        $class_list = $request->input("class_list");
+        $classList = $request->input("class_list");
         $i = 0;
 
-        foreach ($class_list as $item) {
+        foreach ($classList as $item) {
             $time = time() . $i;
             ClassModel::addClass($time, $item["class_name"]);
         }
@@ -31,9 +31,9 @@ class ClassController extends Controller
     // 删除班级
     public function delete(DeleteRequest $request)
     {
-        $class_list = $request->input("class_list");
+        $classList = $request->input("class_list");
 
-        foreach ($class_list as $item) {
+        foreach ($classList as $item) {
             ClassModel::deleteClass($item);
         }
 
@@ -48,7 +48,7 @@ class ClassController extends Controller
         $sortMode = $request->input('sort_mode');
         $sortField = $request->input('sort_field');
 
-        $all_class = [];
+        $allClass = [];
 
         if (!is_null($sortMode) && !is_null($sortField)) {
             $classes = ClassModel::queryClassesWithSort($queryCount, $queryWord, $sortMode, $sortField);
@@ -63,10 +63,10 @@ class ClassController extends Controller
                 'class_name' => $class->class_name,
                 'student_count' => $class->student_count,
             );
-            array_push($all_class, $classData);
+            array_push($allClass, $classData);
         }
 
-        return ResponseTool::jsonResponse(0, 'success', $all_class);
+        return ResponseTool::jsonResponse(0, 'success', $allClass);
     }
 
     // 获取班级列表

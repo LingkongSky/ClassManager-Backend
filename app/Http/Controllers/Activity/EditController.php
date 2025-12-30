@@ -18,29 +18,29 @@ class EditController extends Controller
     // 编辑活动
     public function edit(EditRequest $request)
     {
-        $activity_id = $request->input('activity_id');
-        $file_upload = $request->input('file_upload');
+        $activityId = $request->input('activity_id');
+        $fileUpload = $request->input('file_upload');
         $name = $request->input('name');
         $title = $request->input('title');
-        $class_id = Activity::getClass($activity_id);
+        $classId = Activity::getClass($activityId);
         $requestment = $request->input('requestment');
-        $rename_format = $request->input('rename_format');
+        $renameFormat = $request->input('rename_format');
         $accept = $request->input('accept');
-        $start_time = $request->input('start_time');
-        $stop_time = $request->input('stop_time');
+        $startTime = $request->input('start_time');
+        $stopTime = $request->input('stop_time');
 
-        Activity::edit($activity_id, $name, $title, $class_id, $requestment, $rename_format, $accept, $start_time, $stop_time, $file_upload);
+        Activity::edit($activityId, $name, $title, $classId, $requestment, $renameFormat, $accept, $startTime, $stopTime, $fileUpload);
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
     // 编辑活动时间
     public function editTime(EditTimeRequest $request)
     {
-        $activity_id = $request->input('activity_id');
-        $start_time = $request->input('start_time');
-        $stop_time = $request->input('stop_time');
+        $activityId = $request->input('activity_id');
+        $startTime = $request->input('start_time');
+        $stopTime = $request->input('stop_time');
 
-        Activity::editTime($activity_id, $start_time, $stop_time);
+        Activity::editTime($activityId, $startTime, $stopTime);
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 

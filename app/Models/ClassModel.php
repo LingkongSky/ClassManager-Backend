@@ -94,52 +94,52 @@ class ClassModel extends Model
     }
 
     // 获取班级名称
-    public static function getClassName($class_id)
+    public static function getClassName($classId)
     {
-        return self::query()->where('class_id', $class_id)->first()->class_name;
+        return self::query()->where('class_id', $classId)->first()->class_name;
     }
 
     // 查询班级列表
-    public static function queryClasses($query_count = 0, $query_word = '', $limit = 20)
+    public static function queryClasses($queryCount = 0, $queryWord = '', $limit = 20)
     {
         $query = self::query();
 
-        if (!empty($query_word)) {
-            $query->where('class_name', 'like', '%' . $query_word . '%');
+        if (!empty($queryWord)) {
+            $query->where('class_name', 'like', '%' . $queryWord . '%');
         }
 
-        return $query->offset($query_count)
+        return $query->offset($queryCount)
             ->limit($limit)
             ->get();
     }
 
     // 查询班级列表2
     public static function queryClassesWithSort(
-        $query_count = 0,
-        $query_word = '',
-        $sort_mode = 'asc',
-        $sort_field = 'class_id',
+        $queryCount = 0,
+        $queryWord = '',
+        $sortMode = 'asc',
+        $sortField = 'class_id',
         $limit = 20
     ) {
         $query = self::query();
 
-        if (!empty($query_word)) {
-            $query->where('class_name', 'like', '%' . $query_word . '%');
+        if (!empty($queryWord)) {
+            $query->where('class_name', 'like', '%' . $queryWord . '%');
         }
 
         $validFields = ['class_id', 'class_name', 'student_count'];
-        if (!in_array($sort_field, $validFields)) {
-            $sort_field = 'class_id';
+        if (!in_array($sortField, $validFields)) {
+            $sortField = 'class_id';
         }
 
-        $sort_mode = strtolower($sort_mode);
-        if (!in_array($sort_mode, ['asc', 'desc'])) {
-            $sort_mode = 'asc';
+        $sortMode = strtolower($sortMode);
+        if (!in_array($sortMode, ['asc', 'desc'])) {
+            $sortMode = 'asc';
         }
 
-        $query->orderBy($sort_field, $sort_mode);
+        $query->orderBy($sortField, $sortMode);
 
-        return $query->offset($query_count)
+        return $query->offset($queryCount)
             ->limit($limit)
             ->get();
     }
@@ -182,12 +182,12 @@ class ClassModel extends Model
 
 
     // 获取班级数量
-    public static function getClassCount(?string $query_word = ''): int
+    public static function getClassCount(?string $queryWord = ''): int
     {
         $query = self::query();
 
-        if (!empty($query_word)) {
-            $query->where('class_name', 'like', '%' . $query_word . '%');
+        if (!empty($queryWord)) {
+            $query->where('class_name', 'like', '%' . $queryWord . '%');
         }
 
         return $query->count();

@@ -17,6 +17,9 @@ class LoginController extends Controller
     public function login(LoginRequest $request): JsonResponse
     {
         try {
+            // 检查限流
+            $request->ensureIsNotRateLimited();
+
             // 获取验证后的数据
             $remember = $request->boolean('remember', false);
 
@@ -24,28 +27,31 @@ class LoginController extends Controller
             $student = Student::where('account', $request->input('account'))->first();
 
             // 验证密码
-            if (!$student || Student::passwordHash($request->input('password')) !== $student->password) {
-                $this->handleFailedLogin($request);
+            if (!$student || Student::hashPassword($request->input('password')) !== $student->password) {
+                RateLimiter::hit($request->throttleKey(), 60); // 60秒风控
                 throw ValidationException::withMessages([
-                    ['账号或密码错误'],
+                    'account' => ['账号或密码错误'],
                 ]);
             }
 
             // 清除登录限制计数
-            $this->clearLoginAttempts($request);
+            RateLimiter::clear($request->throttleKey());
 
             // 创建访问令牌（带过期时间）
             $tokenResult = $student->createTokenWithExpiry($request->input('account'), $remember);
 
             $expiresAt = $tokenResult->accessToken->expires_at;
 
-            return  ResponseTool::jsonResponse(0, '登录成功', [
+            return ResponseTool::jsonResponse(0, '登录成功', [
                 'token' => $tokenResult->plainTextToken,
                 'token_type' => 'Bearer',
                 'expires_at' => $expiresAt?->toDateTimeString(),
             ]);
+        } catch (ValidationException $e) {
+            // 如果是验证异常，直接抛出
+            throw $e;
         } catch (\Exception $e) {
-            return  ResponseTool::jsonResponse(
+            return ResponseTool::jsonResponse(
                 1,
                 '登录失败，请稍后重试',
                 config('app.debug') ? $e->getMessage() : null,

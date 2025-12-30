@@ -88,10 +88,10 @@ class Homework extends Model
     // 获取筛选后的活动表格
     public static function getTableByActivityWithSort(
         $activityId,
-        $query_word,
-        $query_count,
-        $sort_mode,
-        $sort_field,
+        $queryWord,
+        $queryCount,
+        $sortMode,
+        $sortField,
         $limit = 20
     ) {
         $query = Student::select(
@@ -108,15 +108,15 @@ class Homework extends Model
             ->where('students.class_id', Activity::getClass($activityId));
 
         // 添加姓名筛选条件
-        if (!empty($query_word)) {
-            $query->where('students.name', 'like', '%' . $query_word . '%');
+        if (!empty($queryWord)) {
+            $query->where('students.name', 'like', '%' . $queryWord . '%');
         }
 
-        $sort_mode = strtolower($sort_mode) === 'desc' ? 'desc' : 'asc';
-        $query->orderBy($sort_field, $sort_mode);
+        $sortMode = strtolower($sortMode) === 'desc' ? 'desc' : 'asc';
+        $query->orderBy($sortField, $sortMode);
 
         // 执行查询
-        return $query->offset($query_count)
+        return $query->offset($queryCount)
             ->limit($limit)
             ->get();
     }
@@ -130,19 +130,19 @@ class Homework extends Model
     }
 
     // 判断学生是否提交某作业
-    public static function hasSubmit($account, $activity_id)
+    public static function hasSubmit($account, $activityId)
     {
         return self::query()
-            ->where('activity_id', $activity_id)
+            ->where('activity_id', $activityId)
             ->where('account', $account)
             ->exists();
     }
 
     // 删除学生的提交记录
-    public static function deleteSubmit($account, $activity_id)
+    public static function deleteSubmit($account, $activityId)
     {
         return self::query()
-            ->where('activity_id', $activity_id)
+            ->where('activity_id', $activityId)
             ->where('account', $account)
             ->delete();
     }

@@ -43,7 +43,7 @@ class ListController extends Controller
             $queryCount
         );
 
-        $all_activities = [];
+        $allActivities = [];
         foreach ($activity as $item) {
             $activityData = array(
                 'activity_id' => $item->activity_id,
@@ -53,9 +53,9 @@ class ListController extends Controller
                 'stop_time' => $item->stop_time,
                 'status' => $item->status,
             );
-            array_push($all_activities, $activityData);
+            array_push($allActivities, $activityData);
         }
-        return ResponseTool::jsonResponse(0, 'success', $all_activities);
+        return ResponseTool::jsonResponse(0, 'success', $allActivities);
     }
 
 
@@ -74,7 +74,7 @@ class ListController extends Controller
             $users = Homework::getTableByActivity($activityId,   $queryWord,  $queryCount);
         }
 
-        $all_activities = [];
+        $allActivities = [];
 
         foreach ($users as $row) {
             $status = 0;
@@ -93,10 +93,10 @@ class ListController extends Controller
                 'submit_date' => $submitDate,
             ];
 
-            array_push($all_activities, $studentData);
+            array_push($allActivities, $studentData);
         }
 
-        return ResponseTool::jsonResponse(0, 'success', $all_activities);
+        return ResponseTool::jsonResponse(0, 'success', $allActivities);
     }
 
 

@@ -2,8 +2,18 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+
 class LoginRequest extends Request
 {
+    public function authenticate(): void
+    {
+        $this->ensureIsNotRateLimited();
+    }
+
     public function rules(): array
     {
         return [
@@ -20,5 +30,27 @@ class LoginRequest extends Request
             'password.required' => '密码不能为空',
         ];
     }
-    
+
+
+
+    public function ensureIsNotRateLimited(): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'account' => trans('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    public function throttleKey(): string
+    {
+        return Str::transliterate(Str::lower($this->input('account')) . '|' . $this->ip());
+    }
 }

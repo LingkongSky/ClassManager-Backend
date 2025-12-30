@@ -38,9 +38,9 @@ class EditController extends Controller
     public function deleteAdmin(DeleteAdminRequest $request)
     {
 
-        $admin_list = $request->input("admin_list");
+        $adminList = $request->input("admin_list");
 
-        foreach ($admin_list as $item) {
+        foreach ($adminList as $item) {
             $request->user()->deleteByAccount($item);
         }
 
@@ -53,7 +53,7 @@ class EditController extends Controller
         $queryCount = $request->input('query_count');
         $queryWord = $request->input('query_word');
 
-        $all_students = [];
+        $allStudents = [];
 
         $students = Student::getAdminList($queryCount, $queryWord);
 
@@ -67,17 +67,17 @@ class EditController extends Controller
                 'permissions_group_name' => PermissionsGroup::getGroupName($student->permissions_group_id),
                 'level' => $student->level,
             );
-            array_push($all_students, $studentsData);
+            array_push($allStudents, $studentsData);
         }
 
-        return ResponseTool::jsonResponse(0, 'success', $all_students);
+        return ResponseTool::jsonResponse(0, 'success', $allStudents);
     }
 
     // 设置管理员
     public function setAdmin(SetAdminRequest $request)
     {
-        $admin_list = $request->input("admin_list");
-        foreach ($admin_list as $item) {
+        $adminList = $request->input("admin_list");
+        foreach ($adminList as $item) {
             Student::setPermissionGroup($item['account'], $item["permissions_group_id"]);
         }
 

@@ -51,7 +51,6 @@ class AdminAuth
             ], Response::HTTP_UNAUTHORIZED);        
         }
 
-
         return $next($request);
     }
 }

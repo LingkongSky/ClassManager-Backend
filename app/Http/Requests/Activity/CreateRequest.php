@@ -11,8 +11,8 @@ class CreateRequest extends Request
     // TODO 处理文件校验 存放与转移
     public function authorize()
     {
-        $class_id = RequestTool::xxs($this->input('class_id'));
-        return $this->user()->isClassInPermisssion($class_id);
+        $classId = RequestTool::xxs($this->input('class_id'));
+        return $this->user()->isClassInPermisssion($classId);
     }
     
     public function rules(): array

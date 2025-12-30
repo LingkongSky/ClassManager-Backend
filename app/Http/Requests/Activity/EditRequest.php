@@ -12,8 +12,8 @@ class EditRequest extends Request
     // TODO 处理文件校验 存放与转移
     public function authorize()
     {
-        $activity_id = RequestTool::xxs($this->input('activity_id'));
-        return $this->user()->isClassInPermisssion(Activity::getClass($activity_id));
+        $activityId = RequestTool::xxs($this->input('activity_id'));
+        return $this->user()->isClassInPermisssion(Activity::getClass($activityId));
     }
 
     public function rules(): array

@@ -11,8 +11,8 @@ class GetListRequest extends Request
 
     public function authorize()
     {
-        $class_id = RequestTool::xxs($this->input('class_id'));
-        return $this->user()->isClassInPermisssion($class_id);
+        $classId = RequestTool::xxs($this->input('class_id'));
+        return $this->user()->isClassInPermisssion($classId);
     }
 
     public function rules(): array

@@ -27,30 +27,15 @@ class ActivityLog extends Model
         'time' => 'datetime',
     ];
 
-    // 访问器：简化事件描述
-    public function getShortEventAttribute()
+    // 插入数据
+    public static function log($account, $activityId, $event, $ip)
     {
-        if (strlen($this->event) > 50) {
-            return substr($this->event, 0, 50) . '...';
-        }
-        return $this->event;
-    }
-
-    // 查询作用域：按事件类型筛选
-    public function scopeByEvent($query, $event)
-    {
-        return $query->where('event', 'like', "%{$event}%");
-    }
-
-    // 关系：日志属于一个学生
-    public function student(): BelongsTo
-    {
-        return $this->belongsTo(Student::class, 'account', 'account');
-    }
-
-    // 关系：日志属于一个活动
-    public function activity(): BelongsTo
-    {
-        return $this->belongsTo(Activity::class, 'activity_id', 'activity_id');
+        return self::create([
+            'account' => $account,
+            'activity_id' => $activityId,
+            'event' => $event,
+            'ip' => $ip,
+            'time' => now(),
+        ]);
     }
 }

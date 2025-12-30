@@ -59,7 +59,7 @@ class Student extends Authenticatable
     }
 
     // 密码Hash
-    public static function passwordHash(string $password)
+    public static function hashPassword(string $password)
     {
         return hash_hmac("sha256", $password, config('app.password_sign'));
     }
@@ -119,7 +119,7 @@ class Student extends Authenticatable
             $student = new self();
             $student->account = $account;
             $student->name = $name;
-            $student->password = Student::passwordHash($password);
+            $student->password = Student::hashPassword($password);
 
             if ($level !== null) {
                 $student->level = $level;
@@ -132,7 +132,6 @@ class Student extends Authenticatable
             if ($permissionsGroupId !== null) {
                 $student->permissions_group_id = $permissionsGroupId;
             }
-
 
             // 保存到数据库
             $student->save();
@@ -212,9 +211,9 @@ class Student extends Authenticatable
                 return [];
             }
 
-            $class_list = $permissionsGroup->getPermissionTarget();
-            foreach ($class_list as $class_id) {
-                array_push($allClass, ClassModel::query()->where('class_id', $class_id)->first());
+            $classList = $permissionsGroup->getPermissionTarget();
+            foreach ($classList as $classId) {
+                array_push($allClass, ClassModel::query()->where('class_id', $classId)->first());
             }
         }
         return $allClass;
@@ -241,27 +240,27 @@ class Student extends Authenticatable
     }
 
     // 查询所有管理员
-    public static function getAdminList($query_count = 0, $query_word = '', $limit = 20)
+    public static function getAdminList($queryCount = 0, $queryWord = '', $limit = 20)
     {
         $query = self::query();
 
-        if (!empty($query_word)) {
-            $query->where('name', 'like', '%' . $query_word . '%');
+        if (!empty($queryWord)) {
+            $query->where('name', 'like', '%' . $queryWord . '%');
         }
 
         return $query->where('level', 5)
-            ->offset($query_count)
+            ->offset($queryCount)
             ->limit($limit)
             ->get();
     }
 
     // 获取管理员数量
-    public static function getAdminCount(?string $query_word = ''): int
+    public static function getAdminCount(?string $queryWord = ''): int
     {
         $query = self::query();
 
-        if (!empty($query_word)) {
-            $query->where('name', 'like', '%' . $query_word . '%')
+        if (!empty($queryWord)) {
+            $query->where('name', 'like', '%' . $queryWord . '%')
                 ->where('level', 5);
         }
 
@@ -287,22 +286,22 @@ class Student extends Authenticatable
     }
 
     // 根据班级获取学生数量
-    public function getCountByClass(string $class_id, ?string $query_word = '')
+    public function getCountByClass(string $classId, ?string $queryWord = '')
     {
         if ($this->level < 10) {
             $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
             if (!$permissionsGroup) {
                 return null;
             }
-            if (!$permissionsGroup->hasTarget($class_id)) {
+            if (!$permissionsGroup->hasTarget($classId)) {
                 return null;
             }
         }
 
-        $query = self::query()->where('class_id', $class_id);
+        $query = self::query()->where('class_id', $classId);
 
-        if (!empty($query_word)) {
-            $query->where('name', 'like', '%' . $query_word . '%');
+        if (!empty($queryWord)) {
+            $query->where('name', 'like', '%' . $queryWord . '%');
         }
 
         return $query->count();
@@ -321,7 +320,7 @@ class Student extends Authenticatable
                 'message' => '管理员账号不存在'
             ];
         }
-        $admin->password = Student::passwordHash($password);
+        $admin->password = Student::hashPassword($password);
         $admin->save();
     }
 
@@ -348,13 +347,13 @@ class Student extends Authenticatable
                 'message' => '账号不存在'
             ];
         }
-        $user->password = Student::passwordHash($password);
+        $user->password = Student::hashPassword($password);
         $user->save();
     }
 
 
     // 修改管理员
-    public static function editAdmin(string $account, string $name, ?string $class_id, string $permission_group_id)
+    public static function editAdmin(string $account, string $name, ?string $classId, string $permissionGroupId)
     {
         try {
             // 查找对应的管理员账号
@@ -370,7 +369,7 @@ class Student extends Authenticatable
             }
 
             // 验证权限组是否存在
-            $permissionGroup = PermissionsGroup::find($permission_group_id);
+            $permissionGroup = PermissionsGroup::find($permissionGroupId);
             if (!$permissionGroup) {
                 return [
                     'success' => false,
@@ -379,8 +378,8 @@ class Student extends Authenticatable
             }
 
             // 验证班级是否存在（如果class_id不为空）
-            if ($class_id) {
-                $class = ClassModel::find($class_id);
+            if ($classId) {
+                $class = ClassModel::find($classId);
                 if (!$class) {
                     return [
                         'success' => false,
@@ -391,8 +390,8 @@ class Student extends Authenticatable
 
             // 更新管理员信息
             $admin->name = $name;
-            $admin->class_id = $class_id;
-            $admin->permissions_group_id = $permission_group_id;
+            $admin->class_id = $classId;
+            $admin->permissions_group_id = $permissionGroupId;
             $admin->save();
 
             return [
@@ -408,8 +407,8 @@ class Student extends Authenticatable
     }
 
 
-    // 修改用户 TODO 对转移后的班级进行鉴权
-    public function edit(string $account, string $name, string $class_id)
+    // 修改用户
+    public function edit(string $account, string $name, string $classId)
     {
         if ($this->level < 10) {
             $permissionsGroup = PermissionsGroup::find($this->permissions_group_id);
@@ -417,6 +416,9 @@ class Student extends Authenticatable
                 return null;
             }
             if (!$permissionsGroup->hasTarget(self::getUserClass($account))) {
+                return null;
+            }
+            if (!$permissionsGroup->hasTarget($classId)) {
                 return null;
             }
         }
@@ -433,7 +435,7 @@ class Student extends Authenticatable
                 ];
             }
 
-            $class = ClassModel::find($class_id);
+            $class = ClassModel::find($classId);
             if (!$class) {
                 return [
                     'success' => false,
@@ -441,7 +443,7 @@ class Student extends Authenticatable
                 ];
             }
 
-            $user->class_id = $class_id;
+            $user->class_id = $classId;
             $user->name = $name;
             $user->save();
 
@@ -458,7 +460,7 @@ class Student extends Authenticatable
     }
 
     // 设置用户的权限组
-    public static function setPermissionGroup($account, $permission_group_id)
+    public static function setPermissionGroup($account, $permissionGroupId)
     {
         try {
             // 查找学生
@@ -472,16 +474,16 @@ class Student extends Authenticatable
             }
 
             // 查找权限组
-            $permission_group = PermissionsGroup::find($permission_group_id)->first();
+            $permissionGroup = PermissionsGroup::find($permissionGroupId)->first();
 
-            if (!$permission_group) {
+            if (!$permissionGroup) {
                 return [
                     'success' => false,
                     'message' => '权限组不存在'
                 ];
             }
 
-            $student->permissions_group_id = $permission_group_id;
+            $student->permissions_group_id = $permissionGroupId;
             $student->save();
 
             return [
