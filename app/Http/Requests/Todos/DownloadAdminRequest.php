@@ -18,8 +18,8 @@ class DownloadAdminRequest extends Request
     public function rules(): array
     {
         return [
-            'activity_id' => 'required|string|max:100',
-            'target_account' => 'required|string|max:100',
+            'activity_id' => 'required|string|max:20',
+            'target_account' => 'required|string|max:20',
         ];
     }
 
@@ -28,6 +28,8 @@ class DownloadAdminRequest extends Request
         return [
             'activity_id.required' => '活动名不能为空',
             'target_account.required' => '目标用户不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 }

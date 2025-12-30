@@ -9,7 +9,7 @@ class GetListRequest extends Request
     public function rules(): array
     {
         return [
-            'class_id' => 'required|string|max:100',
+            'class_id' => 'required|string|max:20',
             'query_count' => 'required|integer|max:100',
             'query_word' => 'present|nullable|string|max:30',
             ];
@@ -21,6 +21,8 @@ class GetListRequest extends Request
             'class_id.required' => '班级ID不能为空',
             'query_count.required' => '查询数量不能为空',
             'query_word.required' => '搜索条件不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

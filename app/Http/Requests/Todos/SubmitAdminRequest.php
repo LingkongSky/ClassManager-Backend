@@ -18,14 +18,14 @@ class SubmitAdminRequest extends Request
     public function rules(): array
     {
         $rules = [
-            'activity_id' => 'required|string|max:100',
-            'target_account' => 'required|string|max:100',
+            'activity_id' => 'required|string|max:20',
+            'target_account' => 'required|string|max:20',
             'file' => 'required|file|max:204800',
         ];
         
         $activityId = RequestTool::xxs($this->input('activity_id'));
         $acceptTypes = str_replace('.','',Activity::getAccept($activityId));
-        $rules['file'] .= '|mimes:' . $acceptTypes;  
+        $rules['file'] .= '|mimes:' . $acceptTypes . ',' .strtoupper($acceptTypes);     
         
         return $rules;
     }
@@ -37,6 +37,8 @@ class SubmitAdminRequest extends Request
             'target_account.required' => '目标账号不能为空',
             'file.required' => '文件不能为空',
             'file.mimes' => '文件类型不支持，请上传指定格式的文件',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 }

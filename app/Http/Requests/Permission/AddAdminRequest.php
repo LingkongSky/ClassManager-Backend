@@ -10,12 +10,12 @@ class AddAdminRequest extends Request
     public function rules(): array
     {
         return [
-            'data' => 'required|string|max:4096',
-            'data.*.name' => 'required|string|max:50',
-            'data.*.account' => 'required|string|max:100',
-            'data.*.password' => 'required|string|min:6|max:255',
-            'data.*.class_id' => 'nullable|string|max:50',
-            'data.*.permissions_group_id' => 'required|string|max:255',
+            'data' => 'required|string|max:40960',
+            'data.*.name' => 'required|string|max:10',
+            'data.*.account' => 'required|string|max:20',
+            'data.*.password' => 'required|string|min:2|max:99',
+            'data.*.class_id' => 'nullable|string|max:20',
+            'data.*.permissions_group_id' => 'required|string|max:20',
         ];
     }
 
@@ -24,14 +24,16 @@ class AddAdminRequest extends Request
         return [
             'data.required' => '数据不能为空',
             'data.*.name.required' => '姓名不能为空',
-            'data.*.name.max' => '姓名长度不能超过50个字符',
+            'data.*.name.max' => '姓名长度不能超过10个字符',
             'data.*.account.required' => '账号不能为空',
-            'data.*.account.max' => '账号长度不能超过100个字符',
+            'data.*.account.max' => '账号长度不能超过20个字符',
             'data.*.password.required' => '密码不能为空',
-            'data.*.password.min' => '密码长度不能少于6个字符',
-            'data.*.password.max' => '密码长度不能超过255个字符',
-            'data.*.class_id.max' => '班级ID长度不能超过50个字符',
+            'data.*.password.min' => '密码长度不能少于2个字符',
+            'data.*.password.max' => '密码长度不能超过99个字符',
+            'data.*.class_id.max' => '班级ID长度不能超过20个字符',
             'data.*.permissions_group_id.required' => '权限组不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

@@ -10,7 +10,7 @@ class SetAdminRequest extends Request
     public function rules(): array
     {
         return [
-            'admin_list' => 'required|string|max:1000000',
+            'admin_list' => 'required|string|max:40960',
             ];
     }
 
@@ -18,6 +18,8 @@ class SetAdminRequest extends Request
     {
         return [
             'admin_list.required' => '新增管理员不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

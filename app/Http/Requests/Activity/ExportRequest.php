@@ -18,8 +18,8 @@ class ExportRequest extends Request
     public function rules(): array
     {
         return [
-            'activity_id' => 'required|string|max:100',
-            'times' => 'required|string|max:100',
+            'activity_id' => 'required|string|max:20',
+            'times' => 'required|string|max:10',
         ];
     }
 
@@ -28,6 +28,8 @@ class ExportRequest extends Request
         return [
             'activity_id.required' => '活动ID不能为空',
             'times.required' => '标记不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

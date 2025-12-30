@@ -18,6 +18,8 @@ class DeleteAdminRequest extends Request
     {
         return [
             'admin_list.required' => '目标不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

@@ -37,7 +37,7 @@ class EditController extends Controller
             $request->ip()
         );
 
-        return ResponseTool::jsonResponse(0, 'success', null);
+        return ResponseTool::jsonResponse(0, 'success', $activityId);
     }
 
     // TODO 处理文件校验 存放与转移
@@ -64,7 +64,7 @@ class EditController extends Controller
             $request->ip()
         );
 
-        return ResponseTool::jsonResponse(0, 'success', null);
+        return ResponseTool::jsonResponse(0, 'success', $activityId);
     }
 
     // 编辑活动时间
@@ -83,7 +83,7 @@ class EditController extends Controller
             $request->ip()
         );
 
-        return ResponseTool::jsonResponse(0, 'success', null);
+        return ResponseTool::jsonResponse(0, 'success', $activityId);
     }
 
     // 获取单活动详情用于填充表单

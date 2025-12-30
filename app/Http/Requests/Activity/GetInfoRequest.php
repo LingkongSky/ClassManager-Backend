@@ -17,7 +17,7 @@ class GetInfoRequest extends Request
     public function rules(): array
     {
         return [
-            'activity_id' => 'required|string|max:100',
+            'activity_id' => 'required|string|max:20',
         ];
     }
 
@@ -25,6 +25,8 @@ class GetInfoRequest extends Request
     {
         return [
             'activity_id.required' => '活动ID不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 }

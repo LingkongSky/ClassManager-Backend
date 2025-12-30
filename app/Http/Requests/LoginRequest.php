@@ -17,8 +17,8 @@ class LoginRequest extends Request
     public function rules(): array
     {
         return [
-            'account' => 'required|string|max:255',
-            'password' => 'required|string|max:255',
+            'account' => 'required|string|max:20',
+            'password' => 'required|string|max:99',
             'remember' => 'sometimes|boolean',
         ];
     }
@@ -28,6 +28,8 @@ class LoginRequest extends Request
         return [
             'account.required' => '账号不能为空',
             'password.required' => '密码不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

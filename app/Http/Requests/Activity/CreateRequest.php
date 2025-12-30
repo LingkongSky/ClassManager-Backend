@@ -18,14 +18,14 @@ class CreateRequest extends Request
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'title' => 'required|string|max:255',
-            'class_id' => 'required|string|max:255',
-            'requestment' => 'required|string|max:4096',
-            'rename_format' => 'required|string|max:100',
-            'accept' => 'required|string|max:255',
-            'start_time' => 'required|string|max:50|date_format:Y-m-d H:i:s',
-            'stop_time' => 'required|string|max:50|date_format:Y-m-d H:i:s|after:start_time',
+            'name' => 'required|string|max:20',
+            'title' => 'required|string|max:20',
+            'class_id' => 'required|string|max:20',
+            'requestment' => 'required|string|max:999',
+            'rename_format' => 'required|string|max:99',
+            'accept' => 'required|string|max:99',
+            'start_time' => 'required|string|max:99|date_format:Y-m-d H:i:s',
+            'stop_time' => 'required|string|max:99|date_format:Y-m-d H:i:s|after:start_time',
         ];
     }
 

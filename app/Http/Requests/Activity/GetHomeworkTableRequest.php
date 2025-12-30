@@ -18,11 +18,13 @@ class GetHomeworkTableRequest extends Request
     public function rules(): array
     {
         return [
-            'activity_id' => 'required|string|max:100',
+            'activity_id' => 'required|string|max:20',
             'query_count' => 'required|integer|max:100',
             'query_word' => 'present|nullable|string|max:30',
             'sort_mode' => 'sometimes|string|max:10',
             'sort_field' => 'sometimes|string|max:30',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
             ];
     }
 

@@ -18,7 +18,7 @@ class GetCountRequest extends Request
     {
         return [
             'query_word' => 'present|nullable|string|max:30',
-            'class_id' => 'required|string|max:100',
+            'class_id' => 'required|string|max:20',
         ];
     }
 
@@ -27,6 +27,8 @@ class GetCountRequest extends Request
         return [
             'class_id.required' => '班级ID不能为空',
             'query_word.required' => '搜索条件不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

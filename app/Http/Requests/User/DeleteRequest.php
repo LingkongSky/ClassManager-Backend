@@ -10,7 +10,7 @@ class DeleteRequest extends Request
     public function rules(): array
     {
         return [
-            'student_list' => 'required|string|max:4096',
+            'student_list' => 'required|string|max:40960',
         ];
     }
 
@@ -18,6 +18,8 @@ class DeleteRequest extends Request
     {
         return [
             'student_list.required' => '用户不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

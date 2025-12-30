@@ -9,9 +9,9 @@ class EditRequest extends Request
     public function rules(): array
     {
         return [
-            'class_id' => 'required|string|max:200',
-            'account' => 'required|string|max:200',
-            'name' => 'required|string|max:200',
+            'class_id' => 'required|string|max:20',
+            'account' => 'required|string|max:20',
+            'name' => 'required|string|max:10',
         ];
     }
 
@@ -21,6 +21,8 @@ class EditRequest extends Request
             'class_id.required' => '班级ID不能为空',
             'account.required' => '学号不能为空',
             'name.required' => '姓名不能为空',
+            'string' => ':attribute 必须为字符串',
+            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

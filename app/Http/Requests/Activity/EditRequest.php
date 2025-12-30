@@ -19,15 +19,15 @@ class EditRequest extends Request
     public function rules(): array
     {
         return [
-            'activity_id' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
-            'title' => 'required|string|max:255',
-            'requestment' => 'required|string|max:4096',
-            'rename_format' => 'required|string|max:100',
-            'accept' => 'required|string|max:255',
+            'activity_id' => 'required|string|max:20',
+            'name' => 'required|string|max:20',
+            'title' => 'required|string|max:20',
+            'requestment' => 'required|string|max:999',
+            'rename_format' => 'required|string|max:99',
+            'accept' => 'required|string|max:99',
             'file_upload' => 'required|string|max:50',
-            'start_time' => 'required|string|max:50|date_format:Y-m-d H:i:s',
-            'stop_time' => 'required|string|max:50|date_format:Y-m-d H:i:s|after:start_time',
+            'start_time' => 'required|string|max:99|date_format:Y-m-d H:i:s',
+            'stop_time' => 'required|string|max:99|date_format:Y-m-d H:i:s|after:start_time',
         ];
     }
 
