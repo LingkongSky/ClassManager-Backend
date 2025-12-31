@@ -38,9 +38,9 @@ class TodosEditController extends Controller
 
         // 移动作业
         $file->storeAs(
-            "homework/{$activity->activity_id}/{$activity->class_id}",
+            "{$activity->activity_id}/{$activity->class_id}",
             $newName,
-            'activity'
+            'homework'
         );
 
         HomeworkLog::log($request->user()->account, $newName, $activity->class_id, $request->input('activity_id'), 'submit', $request->ip());
@@ -71,9 +71,9 @@ class TodosEditController extends Controller
 
         // 移动文件
         $file->storeAs(
-            "homework/{$activity->activity_id}/{$activity->class_id}",
+            "{$activity->activity_id}/{$activity->class_id}",
             $newName,
-            'activity'
+            'homework'
         );
 
         HomeworkLog::log($request->user()->account, $newName, $activity->class_id, $request->input('activity_id'), "Admin submit {$targetAccount}", $request->ip());
@@ -98,9 +98,9 @@ class TodosEditController extends Controller
         }
 
         // 删除文件
-        $filePath = "homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
+        $filePath = "{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
 
-        $storage = Storage::disk('activity');
+        $storage = Storage::disk('homework');
         if ($storage->exists($filePath)) {
             $storage->delete($filePath);
         }
@@ -127,9 +127,9 @@ class TodosEditController extends Controller
         }
 
         // 删除文件
-        $filePath = "homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
+        $filePath = "{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
 
-        $storage = Storage::disk('activity');
+        $storage = Storage::disk('homework');
         if ($storage->exists($filePath)) {
             $storage->delete($filePath);
         }

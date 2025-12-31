@@ -46,30 +46,30 @@ return [
             'throw' => false,
             'report' => false,
         ],
-        'activity' => [
+        'homework' => [ // 作业文件
             'driver' => 'local',
-            'root' => storage_path('activity'),
+            'root' => storage_path('files/activity/homewrok'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
         ],
-        'temp' => [
+        'temp' => [ // 临时文件
             'driver' => 'local',
-            'root' => storage_path('temp'),
+            'root' => storage_path('files/activity/temp'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
         ],
-        'output' => [
+        'output' => [ // 打包导出文件
             'driver' => 'local',
-            'root' => storage_path('output'),
+            'root' => storage_path('files/activity/output'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
         ],
-        'publish' => [
+        'publish' => [  // 活动文件
             'driver' => 'local',
-            'root' => storage_path('publish'),
+            'root' => storage_path('files/activity/publish'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

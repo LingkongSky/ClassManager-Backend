@@ -12,6 +12,7 @@ use App\Http\Requests\Todos\DownloadRequest;
 use App\Http\Requests\Todos\DownloadAdminRequest;
 use App\Models\DownloadLog;
 use App\Utils\ResponseTool;
+use Illuminate\Support\Facades\Storage;
 
 class TodosListController extends Controller
 {
@@ -104,7 +105,6 @@ class TodosListController extends Controller
     // 下载作业
     public function download(DownloadRequest $request)
     {
-
         $activity = Activity::getInfo($request->input('activity_id'));
 
         // 判断活动状态是否为1
@@ -118,11 +118,19 @@ class TodosListController extends Controller
             return ResponseTool::jsonResponse(1, 'failed', null);
         }
 
-        $filePath = "/download/homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
+        $filePath = "{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
 
+        // 检查文件是否存在
+        if (!Storage::disk('homework')->exists($filePath)) {
+            return ResponseTool::jsonResponse(2, '文件不存在', null);
+        }
+
+        // 记录下载日志
         DownloadLog::log($request->user()->account, $homework->file_name, 'publish', 'successful', $request->ip());
 
-        return ResponseTool::jsonResponse(0, 'success', $filePath);
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::disk('homework');
+        return $storage->download($filePath, $homework->file_name);
     }
 
     // 管理员下载作业
@@ -137,10 +145,16 @@ class TodosListController extends Controller
             return ResponseTool::jsonResponse(1, 'failed', null);
         }
 
-        $filePath = "/download/homework/{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
+        $filePath = "{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
+
+        if (!Storage::disk('homework')->exists($filePath)) {
+            return ResponseTool::jsonResponse(1, '文件不存在', null);
+        }
 
         DownloadLog::log($request->user()->account, $homework->file_name, 'publish', 'successful', $request->ip());
 
-        return ResponseTool::jsonResponse(0, 'success', $filePath);
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::disk('homework');
+        return $storage->download($filePath, $homework->file_name);
     }
 }

@@ -22,14 +22,14 @@ class Request extends FormRequest
     // activity_id 权限验证
     protected function authorizeActivityId($activityId)
     {
-        $activityId = RequestTool::xxs($this->input($activityId));
+        $activityId = RequestTool::xxs($activityId);
         return $this->user()->isClassInPermisssion(Activity::getClass($activityId));
     }
 
     // activity in class 权限验证
     protected function authorizeActivityInClass($activityId)
     {
-        $activityId = RequestTool::xxs($this->input($activityId));
+        $activityId = RequestTool::xxs($activityId);
         return ($this->user()->class_id == Activity::getClass($activityId));
     }
     
