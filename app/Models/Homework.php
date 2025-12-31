@@ -125,8 +125,8 @@ class Homework extends Model
     public static function getSubmitInfo($account, $activityId)
     {
         return self::where('account', $account)
-                ->where('activity_id', $activityId)
-                ->first();
+            ->where('activity_id', $activityId)
+            ->first();
     }
 
     // 判断学生是否提交某作业

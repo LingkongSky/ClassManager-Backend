@@ -16,15 +16,13 @@ class EditAdminRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'account.required' => '账号不能为空',
             'name.required' => '姓名不能为空',
             'class_id.required' => '班级不能为空',
             'permissions_group_id.required' => '权限组不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

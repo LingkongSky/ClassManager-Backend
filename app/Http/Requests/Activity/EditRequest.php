@@ -2,18 +2,14 @@
 
 namespace App\Http\Requests\Activity;
 
-use App\Utils\RequestTool;
 use App\Http\Requests\Request;
-use App\Models\Activity;
-
 class EditRequest extends Request
 {
 
     // TODO 处理文件校验 存放与转移
     public function authorize()
     {
-        $activityId = RequestTool::xxs($this->input('activity_id'));
-        return $this->user()->isClassInPermisssion(Activity::getClass($activityId));
+        return parent::authorizeActivityId($this->input('activity_id'));
     }
 
     public function rules(): array
@@ -31,7 +27,7 @@ class EditRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'name.required' => '名称不能为空',
@@ -43,8 +39,6 @@ class EditRequest extends Request
             'rename_format.required' => '命名格式不能为空',
             'start_time.required' => '开始时间不能为空',
             'stop_time.required' => '结束时间不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 }

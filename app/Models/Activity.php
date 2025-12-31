@@ -128,10 +128,7 @@ class Activity extends Model
 
     public static function getClass($activityId)
     {
-        return self::query()
-            ->where('activity_id', $activityId)
-            ->first()
-            ->class_id;
+            return self::where('activity_id', $activityId)->value('class_id');
     }
 
     // TODO 鉴权
@@ -211,10 +208,7 @@ class Activity extends Model
     // 获取可接受文件类型
     public static function getAccept($activityId): string
     {
-        return self::query()
-            ->where('activity_id', $activityId)
-            ->first()
-            ->accept;
+        return self::where('activity_id', $activityId)->value('accept');
     }
 
     // 获取单活动信息用于填充表单

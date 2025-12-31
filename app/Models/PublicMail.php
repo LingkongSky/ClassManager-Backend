@@ -41,15 +41,15 @@ class PublicMail extends Model
         'stop_time' => 'datetime',
     ];
 
- 
+
 
     // 访问器：是否有效
     public function getIsValidAttribute()
     {
         $now = now();
-        return $this->status == 1 && 
-               $this->start_time <= $now && 
-               $this->stop_time >= $now;
+        return $this->status == 1 &&
+            $this->start_time <= $now &&
+            $this->stop_time >= $now;
     }
 
     // 增加阅读次数
@@ -64,8 +64,8 @@ class PublicMail extends Model
     {
         $now = now();
         return $query->where('status', 1)
-                    ->where('start_time', '<=', $now)
-                    ->where('stop_time', '>=', $now);
+            ->where('start_time', '<=', $now)
+            ->where('stop_time', '>=', $now);
     }
 
     // 关系：邮件属于一个所有者（学生）

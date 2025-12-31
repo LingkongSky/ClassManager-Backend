@@ -96,7 +96,7 @@ class ClassModel extends Model
     // 获取班级名称
     public static function getClassName($classId)
     {
-        return self::query()->where('class_id', $classId)->first()->class_name;
+        return self::where('class_id', $classId)->value('class_name');
     }
 
     // 查询班级列表

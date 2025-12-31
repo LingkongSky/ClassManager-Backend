@@ -13,7 +13,7 @@ use App\Utils\ResponseTool;
 use App\Http\Requests\Activity\CreateRequest;
 
 
-class EditController extends Controller
+class ActivityEditController extends Controller
 {
     // TODO 处理文件校验 存放与转移
     //创建活动

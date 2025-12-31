@@ -14,14 +14,11 @@ class EditPasswordRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'account.required' => '账号不能为空',
             'password.required' => '密码不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
-
 }

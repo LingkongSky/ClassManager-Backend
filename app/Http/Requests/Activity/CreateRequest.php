@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Activity;
 
-use App\Utils\RequestTool;
 use App\Http\Requests\Request;
 
 class CreateRequest extends Request
@@ -11,10 +10,9 @@ class CreateRequest extends Request
     // TODO 处理文件校验 存放与转移
     public function authorize()
     {
-        $classId = RequestTool::xxs($this->input('class_id'));
-        return $this->user()->isClassInPermisssion($classId);
+        return parent::authorizeClassId($this->input('class_id'));
     }
-    
+
     public function rules(): array
     {
         return [
@@ -29,7 +27,7 @@ class CreateRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'name.required' => '名称不能为空',
@@ -40,8 +38,6 @@ class CreateRequest extends Request
             'rename_format.required' => '命名格式不能为空',
             'start_time.required' => '开始时间不能为空',
             'stop_time.required' => '结束时间不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 }

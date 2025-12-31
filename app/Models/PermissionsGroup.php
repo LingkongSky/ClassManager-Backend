@@ -68,7 +68,7 @@ class PermissionsGroup extends Model
     // 根据权限组ID查询权限组名称
     public static function getGroupName($groupId)
     {
-        return self::query()->where('group_id', $groupId)->first()->name;
+        return self::where('group_id', $groupId)->value('name');
     }
 
     // 获取所有权限组
@@ -156,7 +156,7 @@ class PermissionsGroup extends Model
             }
 
             $permissionsGroup->name = $permissionsGroupName;
-            $permissionsGroup->target = $classList;    
+            $permissionsGroup->target = $classList;
             $permissionsGroup->save();
 
             return [

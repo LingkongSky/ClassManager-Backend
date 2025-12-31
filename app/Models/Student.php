@@ -274,7 +274,7 @@ class Student extends Authenticatable
     // 获取学生班级
     public static function getUserClass($account)
     {
-        return self::query()->where('account', $account)->first()->class_id;
+        return self::where('account', $account)->value('class_id');
     }
 
     // 获取学生数量

@@ -14,12 +14,10 @@ class AddRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'class_list.required' => '班级不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

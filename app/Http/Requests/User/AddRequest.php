@@ -14,12 +14,10 @@ class AddRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'data.required' => '对象不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 
@@ -39,7 +37,7 @@ class AddRequest extends Request
 
         // 遍历并处理每个元素
         foreach ($data as &$item) {
-            if (isset($item["name"]) && isset($item["account"]) && isset($item["password"])&& isset($item["class_id"]) ) {
+            if (isset($item["name"]) && isset($item["account"]) && isset($item["password"]) && isset($item["class_id"])) {
                 $item["name"] =  RequestTool::xxs($item["name"]);
                 $item["account"] =  RequestTool::xxs($item["account"]);
                 $item["password"] =  RequestTool::xxs($item["password"]);

@@ -8,11 +8,9 @@ use App\Utils\RequestTool;
 
 class SubmitRequest extends Request
 {
-
     public function authorize()
     {
-        $activityId = RequestTool::xxs($this->input('activity_id'));
-        return ($this->user()->class_id == Activity::getClass($activityId));
+        return parent::authorizeActivityInClass($this->input('activity_id'));
     }
 
     public function rules(): array
@@ -21,22 +19,20 @@ class SubmitRequest extends Request
             'activity_id' => 'required|string|max:20',
             'file' => 'required|file|max:204800',
         ];
-        
+
         $activityId = RequestTool::xxs($this->input('activity_id'));
-        $acceptTypes = str_replace('.','',Activity::getAccept($activityId));
-        $rules['file'] .= '|mimes:' . $acceptTypes . ',' .strtoupper($acceptTypes);     
-        
+        $acceptTypes = str_replace('.', '', Activity::getAccept($activityId));
+        $rules['file'] .= '|mimes:' . $acceptTypes . ',' . strtoupper($acceptTypes);
+
         return $rules;
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'activity_id.required' => '活动名不能为空',
             'file.required' => '文件不能为空',
             'file.mimes' => '文件类型不支持，请上传指定格式的文件',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 }

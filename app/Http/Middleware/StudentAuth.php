@@ -9,14 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class StudentAuth
 {
-    /**
-     * 处理传入的请求
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @param  string|null  $guard
-     * @return mixed
-     */
+
     public function handle(Request $request, Closure $next, $guard = null)
     {
         // 1. 检查是否有Bearer Token
@@ -30,7 +23,7 @@ class StudentAuth
 
         // 2. 验证token有效性
         $user = Auth::guard('sanctum')->user();
-        
+
         if (!$user) {
             return response()->json([
                 'status' => 'error',
@@ -42,7 +35,7 @@ class StudentAuth
         $request->setUserResolver(function () use ($user) {
             return $user;
         });
-        
+
         return $next($request);
     }
 }

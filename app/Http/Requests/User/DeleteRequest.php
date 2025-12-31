@@ -14,12 +14,10 @@ class DeleteRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'student_list.required' => '用户不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 
@@ -39,8 +37,8 @@ class DeleteRequest extends Request
 
         // 遍历并处理每个元素
         foreach ($student_list as &$item) {
-                $account = RequestTool::xxs($item);
-                $item = $account;
+            $account = RequestTool::xxs($item);
+            $item = $account;
         }
 
         $input["student_list"] = $student_list;

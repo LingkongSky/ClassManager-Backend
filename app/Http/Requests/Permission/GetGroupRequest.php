@@ -11,16 +11,14 @@ class GetGroupRequest extends Request
         return [
             'query_count' => 'required|integer|max:100',
             'query_word' => 'present|nullable|string|max:30',
-            ];
+        ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'query_count.required' => '查询数量不能为空',
             'query_word.required' => '搜索条件不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

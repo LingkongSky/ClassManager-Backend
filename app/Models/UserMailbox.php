@@ -56,7 +56,7 @@ class UserMailbox extends Model
         if (!in_array($mailId, $allMails)) {
             $allMails[] = $mailId;
             $this->all_mails = implode(',', $allMails);
-            
+
             if ($markAsUnread) {
                 $unreadMails = $this->getUnreadMailsArrayAttribute();
                 $unreadMails[] = $mailId;
@@ -66,7 +66,7 @@ class UserMailbox extends Model
                 $readMails[] = $mailId;
                 $this->read_mails = implode(',', $readMails);
             }
-            
+
             $this->save();
         }
     }
@@ -76,12 +76,12 @@ class UserMailbox extends Model
     {
         $unreadMails = $this->getUnreadMailsArrayAttribute();
         $readMails = $this->getReadMailsArrayAttribute();
-        
+
         $key = array_search($mailId, $unreadMails);
         if ($key !== false) {
             unset($unreadMails[$key]);
             $readMails[] = $mailId;
-            
+
             $this->unread_mails = implode(',', array_values($unreadMails));
             $this->read_mails = implode(',', $readMails);
             $this->save();

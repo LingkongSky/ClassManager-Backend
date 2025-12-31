@@ -14,12 +14,10 @@ class DeleteRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'class_list.required' => '班级不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 
@@ -39,8 +37,8 @@ class DeleteRequest extends Request
 
         // 遍历并处理每个元素
         foreach ($class_list as &$item) {
-                $class_id = RequestTool::xxs($item);
-                $item = $class_id;
+            $class_id = RequestTool::xxs($item);
+            $item = $class_id;
         }
 
         $input["class_list"] = $class_list;

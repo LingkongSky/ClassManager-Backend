@@ -13,7 +13,7 @@ use App\Models\Activity;
 use App\Models\ClassModel;
 use App\Models\Homework;
 
-class ListController extends Controller
+class ActivityListController extends Controller
 {
 
     // 编辑列表:列出活动

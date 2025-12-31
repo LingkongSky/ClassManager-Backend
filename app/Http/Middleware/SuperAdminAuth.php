@@ -9,14 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SuperAdminAuth
 {
-    /**
-     * 处理传入的请求
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @param  string|null  $guard
-     * @return mixed
-     */
+
     public function handle(Request $request, Closure $next, $guard = null)
     {
         // 1. 检查是否有Bearer Token
@@ -30,7 +23,7 @@ class SuperAdminAuth
 
         // 2. 验证token有效性
         $user = Auth::guard('sanctum')->user();
-        
+
         if (!$user) {
             return response()->json([
                 'status' => 'error',
@@ -39,18 +32,18 @@ class SuperAdminAuth
             ], Response::HTTP_UNAUTHORIZED);
         }
 
-        if($user->level < 10){
+        if ($user->level < 10) {
             return response()->json([
                 'status' => 'error',
                 'message' => '权限不足',
                 'data' => null
-            ], Response::HTTP_UNAUTHORIZED);        
+            ], Response::HTTP_UNAUTHORIZED);
         }
 
         $request->setUserResolver(function () use ($user) {
             return $user;
         });
-        
+
         return $next($request);
     }
 }

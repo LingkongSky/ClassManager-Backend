@@ -3,15 +3,12 @@
 namespace App\Http\Requests\Todos;
 
 use App\Http\Requests\Request;
-use App\Models\Activity;
-use App\Utils\RequestTool;
 
 class DeleteRequest extends Request
 {
     public function authorize()
     {
-        $activityId = RequestTool::xxs($this->input('activity_id'));
-        return ($this->user()->class_id == Activity::getClass($activityId));
+        return parent::authorizeActivityInClass($this->input('activity_id'));
     }
 
     public function rules(): array
@@ -21,13 +18,10 @@ class DeleteRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'activity_id.required' => '活动ID不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
-
 }

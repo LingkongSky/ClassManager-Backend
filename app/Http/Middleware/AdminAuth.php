@@ -9,14 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AdminAuth
 {
-    /**
-     * 处理传入的请求
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @param  string|null  $guard
-     * @return mixed
-     */
+
     public function handle(Request $request, Closure $next, $guard = null)
     {
         // 1. 检查是否有Bearer Token
@@ -30,7 +23,7 @@ class AdminAuth
 
         // 2. 验证token有效性
         $user = Auth::guard('sanctum')->user();
-        
+
         if (!$user) {
             return response()->json([
                 'status' => 'error',
@@ -43,12 +36,12 @@ class AdminAuth
             return $user;
         });
 
-        if($user->level < 5){
+        if ($user->level < 5) {
             return response()->json([
                 'status' => 'error',
                 'message' => '权限不足',
                 'data' => null
-            ], Response::HTTP_UNAUTHORIZED);        
+            ], Response::HTTP_UNAUTHORIZED);
         }
 
         return $next($request);

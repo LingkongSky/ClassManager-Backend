@@ -19,7 +19,7 @@ class AddAdminRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'data.required' => '数据不能为空',
@@ -32,8 +32,6 @@ class AddAdminRequest extends Request
             'data.*.password.max' => '密码长度不能超过99个字符',
             'data.*.class_id.max' => '班级ID长度不能超过20个字符',
             'data.*.permissions_group_id.required' => '权限组不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

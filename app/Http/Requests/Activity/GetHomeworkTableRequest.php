@@ -11,8 +11,7 @@ class GetHomeworkTableRequest extends Request
 
     public function authorize()
     {
-        $activityId = RequestTool::xxs($this->input('activity_id'));
-        return $this->user()->isClassInPermisssion(Activity::getClass($activityId));
+        return parent::authorizeActivityId($this->input('activity_id'));
     }
 
     public function rules(): array
@@ -23,12 +22,10 @@ class GetHomeworkTableRequest extends Request
             'query_word' => 'present|nullable|string|max:30',
             'sort_mode' => 'sometimes|string|max:10',
             'sort_field' => 'sometimes|string|max:30',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
-            ];
+        ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'activity_id.required' => '活动ID不能为空',
@@ -45,5 +42,4 @@ class GetHomeworkTableRequest extends Request
                 : $this->query_word
         ]);
     }
-
 }

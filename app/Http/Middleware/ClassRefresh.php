@@ -11,7 +11,7 @@ class ClassRefresh
     public function handle(Request $request, Closure $next)
     {
         ClassModel::updateClassStatus();
-        
+
         return $next($request);
     }
 }

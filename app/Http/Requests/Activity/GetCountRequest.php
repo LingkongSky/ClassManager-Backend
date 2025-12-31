@@ -10,8 +10,7 @@ class GetCountRequest extends Request
 
     public function authorize()
     {
-        $classId = RequestTool::xxs($this->input('class_id'));
-        return $this->user()->isClassInPermisssion($classId);
+        return parent::authorizeClassId($this->input('class_id'));
     }
 
     public function rules(): array
@@ -22,13 +21,11 @@ class GetCountRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'class_id.required' => '班级ID不能为空',
             'query_word.required' => '搜索条件不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 

@@ -14,12 +14,10 @@ class DeleteGroupRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'permissions_group_list.required' => '权限组不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
 
@@ -39,7 +37,7 @@ class DeleteGroupRequest extends Request
 
         // 遍历并处理每个元素
         foreach ($permissions_group_list as &$item) {
-                $item  = RequestTool::xxs($item);
+            $item  = RequestTool::xxs($item);
         }
 
         $input["permissions_group_list"] = $permissions_group_list;

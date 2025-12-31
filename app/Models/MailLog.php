@@ -26,5 +26,4 @@ class MailLog extends Model
         'id' => 'integer',
         'time' => 'datetime',
     ];
-
 }

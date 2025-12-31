@@ -14,14 +14,11 @@ class EditRequest extends Request
         ];
     }
 
-    public function messages(): array
+    public  function specificMessages(): array
     {
         return [
             'class_id.required' => '班级ID不能为空',
             'class_name.required' => '班级名不能为空',
-            'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
         ];
     }
-
 }
