@@ -11,11 +11,12 @@ use App\Models\Activity;
 use App\Models\ActivityLog;
 use App\Utils\ResponseTool;
 use App\Http\Requests\Activity\CreateRequest;
+use App\Utils\RequestTool;
+use Illuminate\Support\Facades\Storage;
 
 
 class ActivityEditController extends Controller
 {
-    // TODO 处理文件校验 存放与转移
     //创建活动
     public function create(CreateRequest $request)
     {
@@ -30,6 +31,15 @@ class ActivityEditController extends Controller
 
         $activityId = Activity::create($name, $title, $classId, $requestment, $renameFormat, $accept, $startTime, $stopTime);
 
+        $files = $request->file('files');
+        if (!empty($files)) {
+            foreach ($files as $file) {
+                if ($file->isValid()) {
+                    $file->storeAs($activityId, RequestTool::xxs($file->getClientOriginalName()), 'publish');
+                }
+            }
+        }
+
         ActivityLog::log(
             $request->user()->account,
             $activityId,
@@ -40,7 +50,6 @@ class ActivityEditController extends Controller
         return ResponseTool::jsonResponse(0, 'success', $activityId);
     }
 
-    // TODO 处理文件校验 存放与转移
     // 编辑活动
     public function edit(EditRequest $request)
     {
@@ -56,6 +65,21 @@ class ActivityEditController extends Controller
         $stopTime = $request->input('stop_time');
 
         Activity::edit($activityId, $name, $title, $classId, $requestment, $renameFormat, $accept, $startTime, $stopTime, $fileUpload);
+
+        if ($fileUpload == "true") {
+            // 删除旧文件
+            $storage = Storage::disk('publish');
+            $storage->delete($activityId);
+
+            $files = $request->file('files');
+            if (!empty($files)) {
+                foreach ($files as $file) {
+                    if ($file->isValid()) {
+                        $file->storeAs($activityId, RequestTool::xxs($file->getClientOriginalName()), 'publish');
+                    }
+                }
+            }
+        }
 
         ActivityLog::log(
             $request->user()->account,

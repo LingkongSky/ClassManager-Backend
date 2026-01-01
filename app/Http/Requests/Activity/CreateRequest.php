@@ -7,7 +7,6 @@ use App\Http\Requests\Request;
 class CreateRequest extends Request
 {
 
-    // TODO 处理文件校验 存放与转移
     public function authorize()
     {
         return parent::authorizeClassId($this->input('class_id'));
@@ -24,6 +23,11 @@ class CreateRequest extends Request
             'accept' => 'required|string|max:99',
             'start_time' => 'required|string|max:99|date_format:Y-m-d H:i:s',
             'stop_time' => 'required|string|max:99|date_format:Y-m-d H:i:s|after:start_time',
+            'files' => 'nullable|array',
+            'files.*' => [
+                'file',
+                'max:' . (config('app.max_upload_size')),
+            ],
         ];
     }
 

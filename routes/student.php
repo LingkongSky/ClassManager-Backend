@@ -22,6 +22,7 @@ Route::middleware('StudentAuth')->group(function () {
         Route::get('open', [TodosListController::class, 'open']);
         Route::post('submit', [TodosEditController::class, 'submit']);
         Route::get('download', [TodosListController::class, 'download']);
+        Route::get('downloadPublish', [TodosListController::class, 'downloadPublish']);
         Route::post('delete', [TodosEditController::class, 'delete']);
     });
 });

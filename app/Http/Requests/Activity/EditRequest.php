@@ -6,7 +6,6 @@ use App\Http\Requests\Request;
 class EditRequest extends Request
 {
 
-    // TODO 处理文件校验 存放与转移
     public function authorize()
     {
         return parent::authorizeActivityId($this->input('activity_id'));
@@ -21,9 +20,14 @@ class EditRequest extends Request
             'requestment' => 'required|string|max:999',
             'rename_format' => 'required|string|max:99',
             'accept' => 'required|string|max:99',
-            'file_upload' => 'required|string|max:50',
+            'file_upload' => 'required|string|max:10',
             'start_time' => 'required|string|max:99|date_format:Y-m-d H:i:s',
             'stop_time' => 'required|string|max:99|date_format:Y-m-d H:i:s|after:start_time',
+            'files' => 'nullable|array',
+            'files.*' => [
+                'file',
+                'max:' . (config('app.max_upload_size')),
+            ],
         ];
     }
 

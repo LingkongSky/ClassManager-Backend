@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests\Activity;
 
-use App\Utils\RequestTool;
 use App\Http\Requests\Request;
-use App\Models\Activity;
 
 class EditTimeRequest extends Request
 {

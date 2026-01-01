@@ -10,6 +10,7 @@ use App\Http\Requests\Todos\OpenRequest;
 use App\Http\Requests\Todos\GetStartedRequest;
 use App\Http\Requests\Todos\DownloadRequest;
 use App\Http\Requests\Todos\DownloadAdminRequest;
+use App\Http\Requests\Todos\DownloadPublishRequest;
 use App\Models\DownloadLog;
 use App\Utils\ResponseTool;
 use Illuminate\Support\Facades\Storage;
@@ -98,7 +99,7 @@ class TodosListController extends Controller
     public function open(OpenRequest $request)
     {
         $data = Activity::getInfo($request->input('activity_id'));
-        $data['files'] = [];
+        $data['files'] = Activity::getActivityFiles($request->input('activity_id'));
         return ResponseTool::jsonResponse(0, 'success', $data);
     }
 
@@ -156,5 +157,22 @@ class TodosListController extends Controller
         /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
         $storage = Storage::disk('homework');
         return $storage->download($filePath, $homework->file_name);
+    }
+
+    // 下载活动发布文件
+    public function downloadPublish(DownloadPublishRequest $request)
+    {
+        $activityId = $request->input('activity_id');
+        $fileName = $request->input('file_name');
+        $filePath = "$activityId/$fileName";
+
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
+        $storage = Storage::disk('publish');
+
+        if (!$storage->exists($filePath)) {
+            return ResponseTool::jsonResponse(2, '文件不存在', null);
+        }
+
+        return $storage->download($filePath);
     }
 }

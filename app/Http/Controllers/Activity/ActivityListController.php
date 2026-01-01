@@ -39,6 +39,10 @@ class ActivityListController extends Controller
         $queryWord = $request->input('query_word');
         $classId = $request->input('class_id');
 
+        if(!$request->user()->isClassInPermisssion($classId)){
+            return  ResponseTool::jsonResponse(1, 'failed', null);
+        }
+
         $activity = Activity::getTableByClass(
             $classId,
             $queryWord,
@@ -101,7 +105,6 @@ class ActivityListController extends Controller
         return ResponseTool::jsonResponse(0, 'success', $allActivities);
     }
 
-    // 导出活动 TODO
     public function export(ExportRequest $request)
     {
         $activityId = $request->input('activity_id');

@@ -101,9 +101,8 @@ class TodosEditController extends Controller
         $filePath = "{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
 
         $storage = Storage::disk('homework');
-        if ($storage->exists($filePath)) {
-            $storage->delete($filePath);
-        }
+        $storage->delete($filePath);
+        
 
         // 删除提交
         Homework::deleteSubmit($request->user()->account, $activity->activity_id);
@@ -130,9 +129,8 @@ class TodosEditController extends Controller
         $filePath = "{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
 
         $storage = Storage::disk('homework');
-        if ($storage->exists($filePath)) {
-            $storage->delete($filePath);
-        }
+        $storage->delete($filePath);
+        
 
         // 删除提交
         Homework::deleteSubmit($targetAccount, $activity->activity_id);

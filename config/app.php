@@ -124,4 +124,5 @@ return [
     ],
 
   'password_sign' => env('PASSWORDSIGN', 'default_value'),
+  'max_upload_size' => env('FileMaxUplaodSize', '1024'),
 ];

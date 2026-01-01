@@ -5,7 +5,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\ActivityLog;
+use Illuminate\Support\Facades\Storage;
 
 class Activity extends Model
 {
@@ -128,10 +128,9 @@ class Activity extends Model
 
     public static function getClass($activityId)
     {
-            return self::where('activity_id', $activityId)->value('class_id');
+        return self::where('activity_id', $activityId)->value('class_id');
     }
 
-    // TODO 鉴权
     public static function getActivityProgress($activityId)
     {
         $activity = self::query()->where('activity_id', $activityId)->first();
@@ -140,8 +139,6 @@ class Activity extends Model
         return $sumbitCount . "/" . $allCount;
     }
 
-
-    // TODO 鉴权
     // 查询活动表格
     public static function getTableByClass($classId, $queryWord, $queryCount, $limit = 20)
     {
@@ -250,10 +247,27 @@ class Activity extends Model
         return $query->count();
     }
 
+    // 根据活动ID查询发布文件
+    public static function getActivityFiles(string $activityId)
+    {
+        $disk = Storage::disk('publish');
+        if (!$disk->exists($activityId)) {
+            return [];
+        }
+
+        $files = $disk->files($activityId);
+
+        $fileNames = [];
+        foreach ($files as $file) {
+            $fileNames[] = basename($file);
+        }
+
+        return $fileNames;
+    }
+
     // 更新活动
     public static function updateActivityStatus()
     {
-
         $lastRunKey = 'update_activity_status_last_run';
         $lastRun = cache()->get($lastRunKey);
         if ($lastRun && (time() - $lastRun) < 30) {
