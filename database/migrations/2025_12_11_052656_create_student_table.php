@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('students', function (Blueprint $table) {
+        Schema::create('student', function (Blueprint $table) {
             $table->id();
             $table->string('name', 10)->nullable(false);
             $table->string('password', 99)->nullable(false);
@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('permissions_group_id', 20)->nullable();
         });
 
-        DB::table('students')->insert([
+        DB::table('student')->insert([
             [
                 'name' => 'Admin',
                 'account' => 'admin',
@@ -31,6 +31,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('students');
+        Schema::dropIfExists('student');
     }
 };

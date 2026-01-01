@@ -43,6 +43,8 @@ class PermissionsGroup extends Model
                 ];
             }
 
+            // 拆分target 验证target是否有效
+
             $group = self::create([
                 'group_id' => $groupId,
                 'name' => $name,

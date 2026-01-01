@@ -12,7 +12,7 @@ class Student extends Authenticatable
     use HasApiTokens, HasFactory;
 
     // 指定表名
-    protected $table = 'students';
+    protected $table = 'student';
 
     // 主键字段名
     protected $primaryKey = 'id';

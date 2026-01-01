@@ -11,7 +11,7 @@ class Activity extends Model
 {
     use HasFactory;
 
-    protected $table = 'activities';
+    protected $table = 'activity';
     public $timestamps = false;
 
     protected $fillable = [

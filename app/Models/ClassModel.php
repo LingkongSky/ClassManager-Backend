@@ -11,7 +11,7 @@ class ClassModel extends Model
 {
     use HasFactory;
 
-    protected $table = 'classes';
+    protected $table = 'class';
 
     public $timestamps = false;
 
