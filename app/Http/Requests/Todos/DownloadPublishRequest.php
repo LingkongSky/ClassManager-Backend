@@ -11,7 +11,7 @@ class DownloadPublishRequest extends Request
     public function authorize()
     {
         $activityId = RequestTool::xxs($this->input('activity_id'));
-        return parent::authorizeActivityInClass($activityId) || $this->user()->isClassInPermisssion(Activity::getClass($activityId));
+        return parent::authorizeActivityInClass($activityId) || $this->user()->isClassInPermission(Activity::getClass($activityId));
     }
 
     public function rules(): array

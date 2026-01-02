@@ -14,6 +14,11 @@ return new class extends Migration
             $table->string('class_id', 20)->nullable(false);
             $table->string('activity_id', 20)->nullable(false);
             $table->string('update_time', 99)->nullable(false);
+
+            $table->index('account');
+            $table->index('class_id');
+            $table->index('activity_id');
+
         });
     }
 

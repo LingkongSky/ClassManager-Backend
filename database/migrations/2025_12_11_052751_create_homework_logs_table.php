@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('file_name', 348)->nullable(false);
             $table->string('class_id', 20)->nullable(false);
             $table->string('activity_id', 20)->nullable(false);
-            $table->string('event', 100)->nullable(false);
+            $table->string('event', 100)->nullable(true);
             $table->string('update_time', 99)->nullable(false);
             $table->string('ip', 40)->nullable();
         });

@@ -12,6 +12,8 @@ return new class extends Migration
             $table->string('class_id', 20)->unique()->nullable(false);
             $table->string('class_name', 20)->nullable(false);
             $table->string('student_count', 20)->nullable();
+            
+            $table->index('class_id');
         });
     }
 

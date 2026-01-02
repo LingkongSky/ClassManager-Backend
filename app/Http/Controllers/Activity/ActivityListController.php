@@ -39,7 +39,7 @@ class ActivityListController extends Controller
         $queryWord = $request->input('query_word');
         $classId = $request->input('class_id');
 
-        if(!$request->user()->isClassInPermisssion($classId)){
+        if(!$request->user()->isClassInPermission($classId)){
             return  ResponseTool::jsonResponse(1, 'failed', null);
         }
 

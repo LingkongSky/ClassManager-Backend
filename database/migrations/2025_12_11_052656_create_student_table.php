@@ -17,6 +17,13 @@ return new class extends Migration
             $table->integer('level')->nullable(false);
             $table->string('class_id', 20)->nullable();
             $table->string('permissions_group_id', 20)->nullable();
+            
+            $table->index('class_id');
+            $table->index('level'); 
+            $table->index('date');
+            $table->index(['class_id', 'level']);
+            $table->index(['class_id', 'date']); 
+            $table->index('name');
         });
 
         DB::table('student')->insert([

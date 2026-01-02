@@ -4,12 +4,13 @@ use App\Http\Controllers\LoginController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Todos\TodosListController;
 use App\Http\Controllers\Todos\TodosEditController;
+use App\Http\Controllers\User\UserEditController;
 
 Route::middleware('StudentAuth')->group(function () {
     // 用户相关
     Route::prefix('user')->group(function () {
         Route::post('logout', [LoginController::class, 'logout']);
-        Route::post('editPassword', [LoginController::class, 'me']);
+        Route::post('editPassword', [UserEditController::class, 'editPassword']);
         Route::get('me', [LoginController::class, 'me']);
     });
 

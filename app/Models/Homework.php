@@ -61,25 +61,25 @@ class Homework extends Model
     public static function getTableByActivity($activityId, $queryWord, $queryCount, $limit = 20)
     {
         $query = Student::select(
-            'students.name',
-            'students.account',
-            'students.class_id',
+            'student.name',
+            'student.account',
+            'student.class_id',
             'homework.update_time',
             'homework.activity_id'
         )
             ->leftJoin('homework', function ($join) use ($activityId) {
-                $join->on('students.account', '=', 'homework.account')
+                $join->on('student.account', '=', 'homework.account')
                     ->where('homework.activity_id', '=', $activityId);
             })
-            ->where('students.class_id', Activity::getClass($activityId));
+            ->where('student.class_id', Activity::getClass($activityId));
 
         if (!empty($queryWord)) {
-            $query->where('students.name', 'like', '%' . $queryWord . '%');
+            $query->where('student.name', 'like', '%' . $queryWord . '%');
         }
 
         // 执行查询
         return $query->orderBy('homework.activity_id')
-            ->orderBy('students.account')
+            ->orderBy('student.account')
             ->offset($queryCount)
             ->limit($limit)
             ->get();
@@ -95,21 +95,21 @@ class Homework extends Model
         $limit = 20
     ) {
         $query = Student::select(
-            'students.name',
-            'students.account',
-            'students.class_id',
+            'student.name',
+            'student.account',
+            'student.class_id',
             'homework.update_time',
             'homework.activity_id'
         )
             ->leftJoin('homework', function ($join) use ($activityId) {
-                $join->on('students.account', '=', 'homework.account')
+                $join->on('student.account', '=', 'homework.account')
                     ->where('homework.activity_id', '=', $activityId);
             })
-            ->where('students.class_id', Activity::getClass($activityId));
+            ->where('student.class_id', Activity::getClass($activityId));
 
         // 添加姓名筛选条件
         if (!empty($queryWord)) {
-            $query->where('students.name', 'like', '%' . $queryWord . '%');
+            $query->where('student.name', 'like', '%' . $queryWord . '%');
         }
 
         $sortMode = strtolower($sortMode) === 'desc' ? 'desc' : 'asc';

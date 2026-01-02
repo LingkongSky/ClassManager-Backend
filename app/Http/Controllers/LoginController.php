@@ -7,6 +7,7 @@ use App\Http\Requests\LoginRequest;
 use App\Models\Student;
 use App\Models\LoginLog;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use App\Utils\ResponseTool;
@@ -62,7 +63,6 @@ class LoginController extends Controller
         }
     }
 
-
     public function me(Request $request)
     {
         $student = $request->user();
@@ -78,9 +78,22 @@ class LoginController extends Controller
     }
 
     // 登出
-    public function logout(): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
-        return ResponseTool::jsonResponse(0, 'success', null);
+        $token = $request->bearerToken();
+        
+        if ($token) {
+            $tokenHash = hash('sha256', $token);
+            $cacheKey = 'user_token:' . $tokenHash;
+            
+            Cache::forget($cacheKey);
+            
+            /** @var Laravel\Sanctum\HasApiTokens::currentAccessToken $currentToken */
+             $currentToken = $request->user()->currentAccessToken();
+             $currentToken->delete();
+        }
+
+        return ResponseTool::jsonResponse(0, '登出成功', null);
     }
 
     // 获取用户数量

@@ -29,10 +29,9 @@ Route::middleware('AdminAuth')->group(function () {
         Route::get('getList', [ClassListController::class, 'getList']);
     });
 
-    Route::prefix('user')->middleware('ClassRefresh')->group(function () {
+    Route::prefix('user')->group(function () {
         Route::post('add', [UserEditController::class, 'add']);
         Route::post('edit', [UserEditController::class, 'edit']);
-        Route::post('editPassword', [UserEditController::class, 'editPassword']);
         Route::get('getList', [UserListController::class, 'getList']);
         Route::post('delete', [UserEditController::class, 'delete']);
         Route::get('getCount', [UserListController::class, 'getCount']);

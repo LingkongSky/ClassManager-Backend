@@ -7,3 +7,8 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [LoginController::class, 'login']);
     Route::get('getUserCount', [LoginController::class, 'getUserCount']);
 });
+
+
+Route::get('ping', function () {
+    return "pong";
+});

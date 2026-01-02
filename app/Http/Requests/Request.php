@@ -16,14 +16,14 @@ class Request extends FormRequest
     protected function authorizeClassId($classId)
     {
         $classId = RequestTool::xxs($classId);
-        return $this->user()->isClassInPermisssion($classId);
+        return $this->user()->isClassInPermission($classId);
     }
 
     // activity_id 权限验证
     protected function authorizeActivityId($activityId)
     {
         $activityId = RequestTool::xxs($activityId);
-        return $this->user()->isClassInPermisssion(Activity::getClass($activityId));
+        return $this->user()->isClassInPermission(Activity::getClass($activityId));
     }
 
     // activity in class 权限验证

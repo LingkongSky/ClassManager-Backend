@@ -2,48 +2,10 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpFoundation\Response;
-
-class AdminAuth
+class AdminAuth extends BaseAuthMiddleware
 {
-
-    public function handle(Request $request, Closure $next, $guard = null)
+    protected function checkLevel($user): bool
     {
-        // 1. 检查是否有Bearer Token
-        if (!$request->bearerToken()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => '未提供认证令牌',
-                'data' => null
-            ], Response::HTTP_UNAUTHORIZED);
-        }
-
-        // 2. 验证token有效性
-        $user = Auth::guard('sanctum')->user();
-
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => '令牌无效或已过期',
-                'data' => null
-            ], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $request->setUserResolver(function () use ($user) {
-            return $user;
-        });
-
-        if ($user->level < 5) {
-            return response()->json([
-                'status' => 'error',
-                'message' => '权限不足',
-                'data' => null
-            ], Response::HTTP_UNAUTHORIZED);
-        }
-
-        return $next($request);
+        return $user->level >= 5;
     }
 }

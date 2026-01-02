@@ -50,8 +50,7 @@ class Activity extends Model
         string $startTime,
         string $stopTime,
     ) {
-
-        $activityId = time() + rand(0, 9999);
+        $activityId = time() . mt_rand(1000, 9999);
 
         $data = [
             'activity_id' => $activityId,
@@ -67,8 +66,7 @@ class Activity extends Model
             'type' => 0,
         ];
 
-        $activity = new self();
-        $activity->fill($data);
+        $activity = new self($data);
         $activity->save();
 
         return $activityId;
@@ -92,7 +90,7 @@ class Activity extends Model
             return false;
         }
 
-        $data = [
+        return $activity->update([
             'name' => $name,
             'title' => $title,
             'class_id' => $classId,
@@ -101,9 +99,7 @@ class Activity extends Model
             'accept' => strtolower($accept),
             'start_time' => $startTime,
             'stop_time' => $stopTime,
-        ];
-
-        return $activity->update($data);
+        ]);
     }
 
     // 编辑活动时间
@@ -112,18 +108,11 @@ class Activity extends Model
         string $startTime,
         string $stopTime,
     ): bool {
-        $activity = self::where('activity_id', $activityId)->first();
-
-        if (!$activity) {
-            return false;
-        }
-
-        $data = [
-            'start_time' => $startTime,
-            'stop_time' => $stopTime,
-        ];
-
-        return $activity->update($data);
+        return self::where('activity_id', $activityId)
+            ->update([
+                'start_time' => $startTime,
+                'stop_time' => $stopTime,
+            ]) > 0;
     }
 
     public static function getClass($activityId)
@@ -133,27 +122,37 @@ class Activity extends Model
 
     public static function getActivityProgress($activityId)
     {
-        $activity = self::query()->where('activity_id', $activityId)->first();
-        $allCount = Student::query()->where('class_id', $activity->class_id)->count();
-        $sumbitCount = Homework::query()->where('activity_id', $activityId)->count();
+        // 一次性获取班级ID
+        $classId = self::where('activity_id', $activityId)->value('class_id');
+
+        if (!$classId) {
+            return "0/0";
+        }
+
+        $allCount = Student::where('class_id', $classId)->count();
+        $sumbitCount = Homework::where('activity_id', $activityId)->count();
+
         return $sumbitCount . "/" . $allCount;
     }
 
     // 查询活动表格
     public static function getTableByClass($classId, $queryWord, $queryCount, $limit = 20)
     {
-        return self::query()->where('class_id', $classId)
-            ->where('name', 'like', '%' . $queryWord . '%')
-            ->offset($queryCount)
-            ->limit($limit)
+        $query = self::where('class_id', $classId);
+
+        if (!empty($queryWord)) {
+            $query->where('name', 'like', '%' . $queryWord . '%');
+        }
+
+        return $query->skip($queryCount)
+            ->take($limit)
             ->get();
     }
 
     // 根据班级获取列表
     public static function getListByClass($classId)
     {
-        $query = self::query()
-            ->where('class_id', $classId)
+        $activities = self::where('class_id', $classId)
             ->select('activity_id', 'name', 'status')
             ->limit(200)
             ->get();
@@ -180,22 +179,21 @@ class Activity extends Model
             ]
         ];
 
+        $childrenRefs = [
+            &$groupedActivities[0]['children'],
+            &$groupedActivities[1]['children'],
+            &$groupedActivities[2]['children']
+        ];
+
         // 按照状态分组
-        foreach ($query as $activity) {
-            $activityData = [
-                'value' => $activity->activity_id,
-                'title' => $activity->name,
-            ];
+        foreach ($activities as $activity) {
+            $status = (int)$activity->status;
 
-            $status = (string)$activity->status; // 转换为字符串以匹配比较
-
-            // 根据状态放入对应的分组
-            if ($status === "0") {
-                $groupedActivities[0]['children'][] = $activityData;
-            } elseif ($status === "1") {
-                $groupedActivities[1]['children'][] = $activityData;
-            } elseif ($status === "2") {
-                $groupedActivities[2]['children'][] = $activityData;
+            if ($status >= 0 && $status <= 2) {
+                $childrenRefs[$status][] = [
+                    'value' => $activity->activity_id,
+                    'title' => $activity->name,
+                ];
             }
         }
 
@@ -205,14 +203,13 @@ class Activity extends Model
     // 获取可接受文件类型
     public static function getAccept($activityId): string
     {
-        return self::where('activity_id', $activityId)->value('accept');
+        return self::where('activity_id', $activityId)->value('accept') ?? '';
     }
 
     // 获取单活动信息用于填充表单
     public static function getInfo($activityId)
     {
-        return self::query()
-            ->where('activity_id', $activityId)
+        return self::where('activity_id', $activityId)
             ->select('activity_id', 'name', 'title', 'start_time', 'stop_time', 'accept', 'class_id', 'rename_format', 'requestment', 'status')
             ->first();
     }
@@ -220,7 +217,8 @@ class Activity extends Model
     // 根据班级获取活动数量
     public static function getCountByClass(string $classId, ?string $queryWord = '')
     {
-        $query = self::query()->where('class_id', $classId);
+        $query = self::where('class_id', $classId);
+
         if (!empty($queryWord)) {
             $query->where('name', 'like', '%' . $queryWord . '%');
         }
@@ -231,62 +229,57 @@ class Activity extends Model
     // 根据班级获取正在进行的活动数量
     public static function getTodosCountByClass(string $classId)
     {
-        $query = self::query()
-            ->where('class_id', $classId)
-            ->where('status', 1);
-        return $query->count();
+        return self::where('class_id', $classId)
+            ->where('status', 1)
+            ->count();
     }
 
     // 根据班级获取正在进行的活动数量
     public static function getStartedTodosCountByClass(string $classId)
     {
-        $query = self::query()
-            ->where('class_id', $classId)
-            ->where('status', 1)
-            ->orWhere('status', 2);
-        return $query->count();
+        return self::where('class_id', $classId)
+            ->whereIn('status', [1, 2])
+            ->count();
     }
 
     // 根据活动ID查询发布文件
     public static function getActivityFiles(string $activityId)
     {
         $disk = Storage::disk('publish');
-        if (!$disk->exists($activityId)) {
+        $directory = $activityId;
+
+        if (!$disk->exists($directory)) {
             return [];
         }
 
-        $files = $disk->files($activityId);
+        $files = $disk->files($directory);
 
-        $fileNames = [];
-        foreach ($files as $file) {
-            $fileNames[] = basename($file);
-        }
-
-        return $fileNames;
+        return array_map(function ($file) {
+            return basename($file);
+        }, $files);
     }
 
-    // 更新活动
+    // 更新活动状态
     public static function updateActivityStatus()
     {
-        $lastRunKey = 'update_activity_status_last_run';
-        $lastRun = cache()->get($lastRunKey);
-        if ($lastRun && (time() - $lastRun) < 30) {
-            return;
-        }
-
         $now = date('Y-m-d H:i:s');
 
+        // 更新状态为1（进行中）的记录
         self::where('start_time', '<=', $now)
             ->where('stop_time', '>=', $now)
             ->where('status', '!=', 1)
             ->update(['status' => 1]);
 
+        // 更新状态为2（已结束）的记录
         self::where('stop_time', '<', $now)
             ->where('status', '!=', 2)
             ->update(['status' => 2]);
 
+        // 更新状态为0（未开始）的记录
         self::where('start_time', '>', $now)
             ->where('status', '!=', 0)
             ->update(['status' => 0]);
+
+        return true;
     }
 }

@@ -20,6 +20,9 @@ return new class extends Migration
             $table->string('accept', 99)->nullable();
             $table->string('status', 5)->nullable(false);
             $table->string('type', 5)->nullable(false);
+
+            $table->index('class_id');
+            $table->index('activity_id');
         });
     }
 

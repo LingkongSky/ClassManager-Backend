@@ -17,7 +17,7 @@ class SubmitRequest extends Request
     {
         $rules = [
             'activity_id' => 'required|string|max:20',
-            'file' => 'required|file|max:204800',
+            'file' => 'required|file|max:' . config('app.max_upload_size'),
         ];
 
         $activityId = RequestTool::xxs($this->input('activity_id'));

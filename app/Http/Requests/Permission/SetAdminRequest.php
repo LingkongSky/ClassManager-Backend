@@ -10,11 +10,11 @@ class SetAdminRequest extends Request
     public function rules(): array
     {
         return [
-            'admin_list' => 'required|string|max:40960',
+            'admin_list' => 'required|array|max:40960',
         ];
     }
 
-    public  function specificMessages(): array
+    public function specificMessages(): array
     {
         return [
             'admin_list.required' => '新增管理员不能为空',

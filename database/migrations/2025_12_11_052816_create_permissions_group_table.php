@@ -12,6 +12,8 @@ return new class extends Migration
             $table->string('group_id', 20)->unique()->nullable(false);
             $table->string('name', 40)->nullable(false);
             $table->string('target', 9999)->nullable(false);
+
+            $table->index('group_id');
         });
     }
 

@@ -5,7 +5,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ClassModel extends Model
 {
@@ -33,8 +34,6 @@ class ClassModel extends Model
     public static function addClass(string $classId, string $className)
     {
         try {
-
-            // 检查班级ID是否已存在
             if (self::where('class_id', $classId)->exists()) {
                 return [
                     'success' => false,
@@ -42,13 +41,11 @@ class ClassModel extends Model
                 ];
             }
 
-            // 创建班级
-            $class = self::create([
+            return self::create([
                 'class_id' => $classId,
-                'class_name' => $className
+                'class_name' => $className,
+                'student_count' => 0
             ]);
-
-            return $class;
         } catch (\Exception $e) {
             return [
                 'success' => false,
@@ -61,20 +58,9 @@ class ClassModel extends Model
     public static function deleteClass(string $classId)
     {
         try {
-            // 查找班级
-            $class = self::where('class_id', $classId)->first();
+            $deleted = self::where('class_id', $classId)->delete();
 
-            if (!$class) {
-                return [
-                    'success' => false,
-                    'message' => '班级不存在'
-                ];
-            }
-
-            // 删除班级
-            $deleted = $class->delete();
-
-            if ($deleted) {
+            if ($deleted > 0) {
                 return [
                     'success' => true,
                     'message' => '班级删除成功'
@@ -82,7 +68,7 @@ class ClassModel extends Model
             } else {
                 return [
                     'success' => false,
-                    'message' => '班级删除失败'
+                    'message' => '班级不存在'
                 ];
             }
         } catch (\Exception $e) {
@@ -93,10 +79,14 @@ class ClassModel extends Model
         }
     }
 
-    // 获取班级名称
     public static function getClassName($classId)
     {
-        return self::where('class_id', $classId)->value('class_name');
+        $cacheKey = 'class_name_' . $classId;
+        $cacheTime = 30;
+
+        return Cache::remember($cacheKey, $cacheTime, function () use ($classId) {
+            return self::where('class_id', $classId)->value('class_name');
+        });
     }
 
     // 查询班级列表
@@ -105,12 +95,12 @@ class ClassModel extends Model
         $query = self::query();
 
         if (!empty($queryWord)) {
-            $query->where('class_name', 'like', '%' . $queryWord . '%');
+            $query->where('class_name', 'like', $queryWord . '%');
         }
 
-        return $query->offset($queryCount)
-            ->limit($limit)
-            ->get();
+        return $query->skip($queryCount)
+            ->take($limit)
+            ->get(['class_id', 'class_name', 'student_count']);
     }
 
     // 查询班级列表2
@@ -121,12 +111,6 @@ class ClassModel extends Model
         $sortField = 'class_id',
         $limit = 20
     ) {
-        $query = self::query();
-
-        if (!empty($queryWord)) {
-            $query->where('class_name', 'like', '%' . $queryWord . '%');
-        }
-
         $validFields = ['class_id', 'class_name', 'student_count'];
         if (!in_array($sortField, $validFields)) {
             $sortField = 'class_id';
@@ -137,41 +121,53 @@ class ClassModel extends Model
             $sortMode = 'asc';
         }
 
-        $query->orderBy($sortField, $sortMode);
+        $query = self::query();
 
-        return $query->offset($queryCount)
-            ->limit($limit)
-            ->get();
+        if (!empty($queryWord)) {
+            $query->where('class_name', 'like', $queryWord . '%');
+        }
+
+        return $query->orderBy($sortField, $sortMode)
+            ->skip($queryCount)
+            ->take($limit)
+            ->get(['class_id', 'class_name', 'student_count']);
     }
 
     // 获取所有班级
     public static function getAllClasses()
     {
-        return self::orderBy('class_id')->get(['class_id', 'class_name']);
+        $cacheKey = 'all_classes_list';
+        $cacheTime = 60;
+
+        return Cache::remember($cacheKey, $cacheTime, function () {
+            return self::orderBy('class_id')->get(['class_id', 'class_name']);
+        });
     }
 
     // 修改班级信息
     public static function editClass(string $classId, string $newClassName): array
     {
         try {
-            // 查找班级
-            $class = self::where('class_id', $classId)->first();
+            $updated = self::where('class_id', $classId)
+                ->update(['class_name' => $newClassName]);
 
-            if (!$class) {
+            if ($updated > 0) {
+                Cache::forget('class_name_' . $classId);
+                Cache::forget('all_classes_list');
+
+                $class = self::where('class_id', $classId)->first();
+
+                return [
+                    'success' => true,
+                    'message' => '班级修改成功',
+                    'class' => $class
+                ];
+            } else {
                 return [
                     'success' => false,
                     'message' => '班级不存在'
                 ];
             }
-
-            $class->class_name = $newClassName;
-            $class->save();
-
-            return [
-                'success' => true,
-                'message' => '班级修改成功',
-                'class' => $class
-            ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
@@ -180,36 +176,72 @@ class ClassModel extends Model
         }
     }
 
-
     // 获取班级数量
     public static function getClassCount(?string $queryWord = ''): int
     {
-        $query = self::query();
+        $cacheKey = 'class_count_' . md5($queryWord ?? '');
+        $cacheTime = 300;
 
-        if (!empty($queryWord)) {
-            $query->where('class_name', 'like', '%' . $queryWord . '%');
-        }
+        return Cache::remember($cacheKey, $cacheTime, function () use ($queryWord) {
+            $query = self::query();
 
-        return $query->count();
+            if (!empty($queryWord)) {
+                $query->where('class_name', 'like', $queryWord . '%');
+            }
+
+            return $query->count();
+        });
     }
 
     // 更新班级的学生数量
     public static function updateClassStatus()
     {
-
         $lastRunKey = 'update_class_status_last_run';
-        $lastRun = cache()->get($lastRunKey);
-        if ($lastRun && (time() - $lastRun) < 30) {
+        $lastRun = Cache::get($lastRunKey);
+
+        if ($lastRun && (time() - $lastRun) < 60) {
             return;
         }
 
-        $classes = self::all();
+        DB::statement("
+            UPDATE class c
+            SET student_count = (
+                SELECT COUNT(*) 
+                FROM student s 
+                WHERE s.class_id = c.class_id
+            )
+        ");
 
-        foreach ($classes as $class) {
-            $class->student_count = Student::query()
-                ->where('class_id', $class->class_id)
-                ->count();
-            $class->save();
+        Cache::put($lastRunKey, time(), 65);
+
+        Cache::forget('all_classes_list');
+    }
+
+    public static function updateTargetClass(string $classId): array
+    {
+        try {
+            $updated = DB::update("
+                UPDATE class c
+                SET student_count = (
+                    SELECT COUNT(*) 
+                    FROM student s 
+                    WHERE s.class_id = ?
+                )
+                WHERE c.class_id = ?
+            ", [$classId, $classId]);
+
+            Cache::forget('all_classes_list');
+
+            return [
+                'success' => true,
+                'message' => '班级更新成功',
+                'updated' => $updated
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => '更新班级时发生错误: ' . $e->getMessage()
+            ];
         }
     }
 }
