@@ -22,7 +22,7 @@ Route::middleware('AdminAuth')->group(function () {
         Route::post('edit', [ActivityEditController::class, 'edit']);
         Route::post('editTime', [ActivityEditController::class, 'editTime']);
         Route::post('delete', [ActivityEditController::class, 'delete']);
-        Route::post('export', [ActivityListController::class, 'export']);
+        Route::get('export', [ActivityListController::class, 'export']);
     });
 
     Route::prefix('class')->group(function () {

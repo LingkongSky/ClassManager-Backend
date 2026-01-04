@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Activity\DeleteRequest;
 use App\Http\Requests\Activity\EditRequest;
 use App\Http\Requests\Activity\EditTimeRequest;
-use App\Http\Requests\Activity\GetInfoRequest;
 use App\Models\Activity;
 use App\Models\ActivityLog;
 use App\Utils\ResponseTool;
@@ -108,14 +107,6 @@ class ActivityEditController extends Controller
         );
 
         return ResponseTool::jsonResponse(0, 'success', $activityId);
-    }
-
-    // 获取单活动详情用于填充表单
-    public function getInfo(GetInfoRequest $request)
-    {
-        $data = Activity::getInfo($request->input('activity_id'));
-        $data['files'] = [];
-        return ResponseTool::jsonResponse(0, 'success', $data);
     }
 
     //删除活动

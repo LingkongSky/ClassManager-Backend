@@ -8,11 +8,13 @@ use App\Http\Requests\Activity\GetCountRequest;
 use App\Http\Requests\Activity\GetHomeworkTableRequest;
 use App\Http\Requests\Activity\GetListRequest;
 use App\Http\Requests\Activity\GetTableRequest;
+use App\Http\Requests\Activity\GetInfoRequest;
 use App\Models\Activity;
 use App\Models\ClassModel;
 use App\Models\Homework;
 use Illuminate\Support\Facades\Storage;
 use App\Utils\ResponseTool;
+use App\Utils\ZipTool;
 
 class ActivityListController extends Controller
 {
@@ -105,6 +107,14 @@ class ActivityListController extends Controller
         return ResponseTool::jsonResponse(0, 'success', $allActivities);
     }
 
+    // 获取单活动详情用于填充表单
+    public function getInfo(GetInfoRequest $request)
+    {
+        $data = Activity::getInfo($request->input('activity_id'));
+        $data['files'] = [];
+        return ResponseTool::jsonResponse(0, 'success', $data);
+    }
+
     public function export(ExportRequest $request)
     {
         $activityId = $request->input('activity_id');
@@ -193,47 +203,13 @@ class ActivityListController extends Controller
             Storage::disk('temp')->put($destinationPath, $fileContent);
         }
 
-        // 创建ZIP文件
-        $zip = new \ZipArchive;
-
-        // 使用 Storage::disk() 获取路径
-        $fullZipPath = Storage::disk('output')->path($fullPath);
-
-        // 确保目录存在
-        $zipDir = dirname($basePath);
-        if (!is_dir($zipDir)) {
-            mkdir($zipDir, 0755, true);
-        }
-
-        if ($zip->open($fullZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
-            // 获取临时文件夹中的所有文件
-            $tempFiles = Storage::disk('temp')->files($basePath);
-
-            foreach ($tempFiles as $file) {
-                if (basename($file) === '.' || basename($file) === '..') {
-                    continue;
-                }
-
-                // 添加文件到ZIP
-                $fileContent = Storage::disk('temp')->get($file);
-                $zip->addFromString(basename($file), $fileContent);
-            }
-
-            $zip->close();
-
-            // 清理临时文件夹
-            Storage::disk('temp')->deleteDirectory($basePath);
-
-            // 检查ZIP文件是否创建成功 - 使用 Storage::disk() 检查
-            if (Storage::disk('output')->exists($fullPath)) {
-                /** @var \Illuminate\Filesystem\FilesystemAdapter $storage */
-                $storage = Storage::disk('output');
-                return $storage->download($fullPath, $fileName);
-            } else {
-                return ResponseTool::jsonResponse(1, 'ZIP文件创建失败', null);
-            }
-        } else {
-            return ResponseTool::jsonResponse(1, '无法创建ZIP文件', null);
-        }
+        // 压缩目标文件夹
+        ZipTool::compressFileFolder(Storage::disk('output')->path($fullPath),Storage::disk('temp')->path($basePath));
+        
+        Storage::disk('temp')->deleteDirectory($basePath);
+        
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $storage **/   
+        $storage = Storage::disk('output');
+        return $storage->download($fullPath, $fileName);
     }
 }
