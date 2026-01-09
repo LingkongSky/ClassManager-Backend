@@ -24,14 +24,16 @@ class TodosEditController extends Controller
         $activity = Activity::getInfo($request->input('activity_id'));
 
         // 判断活动状态是否为1
-        if ($activity->status != 1) {
+        if ($activity->status != 1 && $request->user()->level == 0) {
             return ResponseTool::jsonResponse(1, 'failed', null);
         }
 
         $file = $request->file('file');
         $extension = $file->getClientOriginalExtension();
         $className = ClassModel::getClassName($activity->class_id);
-        $newName = "{$className} {$request->user()->name} {$request->user()->account}.{$extension}";
+        $account  = $request->user()->account;
+        $name = $request->user()->name;
+        $newName = "{$className} {$name} {$account}.{$extension}";
 
         // 提交作业
         Homework::submitHomework($activity->activity_id, $request->user()->account, $activity->class_id, $newName);
@@ -87,7 +89,7 @@ class TodosEditController extends Controller
         $activity = Activity::getInfo($request->input('activity_id'));
 
         // 判断活动状态是否为1
-        if ($activity->status != 1) {
+        if ($activity->status != 1 && $request->user()->level == 0) {
             return ResponseTool::jsonResponse(1, 'failed', null);
         }
 

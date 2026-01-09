@@ -20,11 +20,7 @@ class UserMailbox extends Model
         'read_mails',
         'all_mails'
     ];
-
-    protected $casts = [
-        'id' => 'integer',
-    ];
-
+    
     // 访问器：获取未读邮件数组
     public function getUnreadMailsArrayAttribute()
     {

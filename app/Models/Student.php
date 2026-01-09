@@ -44,7 +44,6 @@ class Student extends Authenticatable
 
     // 字段类型转换
     protected $casts = [
-        'id' => 'integer',
         'level' => 'integer',
     ];
 

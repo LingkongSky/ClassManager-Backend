@@ -22,10 +22,6 @@ class ClassModel extends Model
         'student_count'
     ];
 
-    protected $casts = [
-        'id' => 'integer',
-    ];
-
     protected $primaryKey = 'class_id';
     public $incrementing = false;
     protected $keyType = 'string';

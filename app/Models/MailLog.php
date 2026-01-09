@@ -22,8 +22,4 @@ class MailLog extends Model
         'ip'
     ];
 
-    protected $casts = [
-        'id' => 'integer',
-        'time' => 'datetime',
-    ];
 }

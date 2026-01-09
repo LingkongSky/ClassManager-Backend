@@ -20,11 +20,6 @@ class LoginLog extends Model
         'ip'
     ];
 
-    protected $casts = [
-        'id' => 'integer',
-        'time' => 'datetime',
-    ];
-
     public static function log($account, $ip)
     {
         return self::create([

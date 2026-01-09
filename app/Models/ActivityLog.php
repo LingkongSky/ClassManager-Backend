@@ -21,10 +21,6 @@ class ActivityLog extends Model
         'ip'
     ];
 
-    protected $casts = [
-        'id' => 'integer',
-        'time' => 'datetime',
-    ];
 
     // 插入数据
     public static function log($account, $activityId, $event, $ip)

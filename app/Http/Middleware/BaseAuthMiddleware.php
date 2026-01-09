@@ -58,6 +58,6 @@ abstract class BaseAuthMiddleware
             'status' => 'error',
             'message' => $message,
             'data' => null
-        ], Response::HTTP_UNAUTHORIZED);
+        ], Response::HTTP_UNAUTHORIZED, ['Content-Type' => 'application/json; charset=UTF-8']);
     }
 }

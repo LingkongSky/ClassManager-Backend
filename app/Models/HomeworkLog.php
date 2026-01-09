@@ -23,11 +23,6 @@ class HomeworkLog extends Model
         'ip',
     ];
 
-    protected $casts = [
-        'id' => 'integer',
-        'update_time' => 'datetime',
-    ];
-
     public static function log($account, $fileName, $classId, $activityId,  $event, $ip)
     {
         return self::create([

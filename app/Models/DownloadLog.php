@@ -23,8 +23,6 @@ class DownloadLog extends Model
     ];
 
     protected $casts = [
-        'id' => 'integer',
-        'time' => 'datetime',
         'status' => 'integer',
     ];
 

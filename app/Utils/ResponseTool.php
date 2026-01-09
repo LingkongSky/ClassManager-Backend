@@ -10,6 +10,6 @@ class ResponseTool
             'code' => $code,
             'message' => $message,
             'data' => $data,
-        ], $httpStatus);
+        ], $httpStatus, ['Content-Type' => 'application/json; charset=UTF-8']);
     }
 }

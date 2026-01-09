@@ -108,11 +108,6 @@ class TodosListController extends Controller
     {
         $activity = Activity::getInfo($request->input('activity_id'));
 
-        // 判断活动状态是否为1
-        if ($activity->status != 1) {
-            return ResponseTool::jsonResponse(1, 'failed', null);
-        }
-
         // 检测是否提交
         $homework = Homework::getSubmitInfo($request->user()->account, $activity->activity_id);
         if (!$homework) {
@@ -149,7 +144,7 @@ class TodosListController extends Controller
         $filePath = "{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
 
         if (!Storage::disk('homework')->exists($filePath)) {
-            return ResponseTool::jsonResponse(1, '文件不存在', null);
+            return ResponseTool::jsonResponse(2, '文件不存在', null);
         }
 
         DownloadLog::log($request->user()->account, $homework->file_name, 'publish', 'successful', $request->ip());

@@ -21,11 +21,6 @@ class Homework extends Model
         'update_time'
     ];
 
-    protected $casts = [
-        'id' => 'integer',
-        'update_time' => 'datetime',
-    ];
-
     // 提交作业
     public static function submitHomework($activityId, $account, $classId, $fileName)
     {
@@ -41,7 +36,7 @@ class Homework extends Model
                 'update_time' => $now,
             ]);
         } else {
-            $homework = self::create([
+            self::create([
                 'account' => $account,
                 'file_name' => $fileName,
                 'class_id' => $classId,
@@ -49,11 +44,6 @@ class Homework extends Model
                 'update_time' => $now
             ]);
         }
-        return [
-            'success' => true,
-            'homework' => $homework,
-            'message' => '作业提交成功'
-        ];
     }
 
 

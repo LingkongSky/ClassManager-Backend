@@ -29,7 +29,6 @@ class Activity extends Model
     ];
 
     protected $casts = [
-        'id' => 'integer',
         'status' => 'integer',
         'type' => 'integer',
     ];
