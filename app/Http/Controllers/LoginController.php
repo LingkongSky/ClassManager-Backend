@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Models\ClassModel;
 use App\Models\Student;
 use App\Models\LoginLog;
 use Illuminate\Http\JsonResponse;
@@ -73,6 +74,7 @@ class LoginController extends Controller
             'account' => $student->account,
             'level' => $student->level,
             'class_id' => $student->class_id,
+            'class_name' => ClassModel::getClassName($student->class_id),
             'permissions_group_id' => $student->permissions_group_id,
         ]);
     }

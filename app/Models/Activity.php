@@ -143,7 +143,9 @@ class Activity extends Model
             $query->where('name', 'like', '%' . $queryWord . '%');
         }
 
-        return $query->skip($queryCount)
+        return $query->orderBy('status', 'asc')
+            ->orderBy('id', 'desc')
+            ->skip($queryCount)
             ->take($limit)
             ->get();
     }

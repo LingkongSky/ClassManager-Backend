@@ -513,7 +513,7 @@ class Student extends Authenticatable
     // 获取待办
     public function getTodos()
     {
-        return Activity::select(['activity_id', 'title', 'status', 'start_time', 'stop_time'])
+        return Activity::select(['activity_id', 'title', 'status', 'start_time', 'stop_time','name','type'])
             ->where('class_id', $this->class_id)
             ->where('status', 1)
             ->orderBy('start_time', 'asc')
@@ -524,7 +524,7 @@ class Student extends Authenticatable
     // 获取已开始
     public function getStarted()
     {
-        return Activity::select(['activity_id', 'title', 'status', 'start_time', 'stop_time'])
+        return Activity::select(['activity_id', 'title', 'status', 'start_time', 'stop_time','name','type'])
             ->where('class_id', $this->class_id)
             ->whereIn('status', [1, 2])
             ->orderBy('start_time', 'asc')
