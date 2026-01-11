@@ -48,7 +48,7 @@ return [
         ],
         'homework' => [ // 作业文件
             'driver' => 'local',
-            'root' => storage_path('files/activity/homewrok'),
+            'root' => storage_path('files/activity/homework'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
