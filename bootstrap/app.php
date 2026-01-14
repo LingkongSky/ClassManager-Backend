@@ -8,6 +8,7 @@ use App\Http\Middleware\AdminAuth;
 use App\Http\Middleware\SuperAdminAuth;
 use App\Http\Middleware\ActivityRefresh;
 use App\Http\Middleware\ClassRefresh;
+use App\Http\Middleware\TrustProxies;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append([
             EnsureFrontendRequestsAreStateful::class,
             ConvertEmptyStringsToNull::class,
+            TrustProxies::class,
         ]);
 
         // 中间件别名
