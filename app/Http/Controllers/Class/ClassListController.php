@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Class;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Class\GetRequest;
 use App\Http\Requests\Class\GetCountRequest;
+use App\Http\Requests\Class\GetClassIdRequest;
 use Illuminate\Http\Request;
 use App\Models\ClassModel;
 use App\Utils\ResponseTool;
@@ -50,5 +51,20 @@ class ClassListController extends Controller
     public function getCount(GetCountRequest $request)
     {
         return ResponseTool::jsonResponse(0, 'success', ClassModel::getClassCount($request->input("query_word")));
+    }
+
+    // 根据班级名称获取班级ID
+    public function getClassId(GetClassIdRequest $request)
+    {
+        $className = $request->input('class_name');
+        $classId = ClassModel::where('class_name', $className)->value('class_id');
+
+        if (is_null($classId)) {
+            return ResponseTool::jsonResponse(1, 'class not found', null, 404);
+        }
+
+        return ResponseTool::jsonResponse(0, 'success', [
+            'class_id' => $classId,
+        ]);
     }
 }

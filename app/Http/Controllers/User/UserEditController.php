@@ -38,6 +38,7 @@ class UserEditController extends Controller
 
         return ResponseTool::jsonResponse(0, 'success', null);
     }
+    
     // 修改用户
     public function edit(EditRequest $request)
     {

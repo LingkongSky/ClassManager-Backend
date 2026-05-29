@@ -27,6 +27,7 @@ Route::middleware('AdminAuth')->group(function () {
 
     Route::prefix('class')->group(function () {
         Route::get('getList', [ClassListController::class, 'getList']);
+        Route::post('getId', [ClassListController::class, 'getClassId']);
     });
 
     Route::prefix('user')->group(function () {
