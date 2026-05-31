@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Models\ClassModel;
-use App\Models\Student;
 use App\Models\LoginLog;
+use App\Models\Student;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
@@ -83,16 +83,16 @@ class LoginController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $token = $request->bearerToken();
-        
+
         if ($token) {
             $tokenHash = hash('sha256', $token);
             $cacheKey = 'user_token:' . $tokenHash;
-            
+
             Cache::forget($cacheKey);
             
             /** @var Laravel\Sanctum\HasApiTokens::currentAccessToken $currentToken */
-             $currentToken = $request->user()->currentAccessToken();
-             $currentToken->delete();
+            $currentToken = $request->user()?->currentAccessToken();
+            $currentToken?->delete();
         }
 
         return ResponseTool::jsonResponse(0, '登出成功', null);

@@ -22,7 +22,7 @@ abstract class BaseAuthMiddleware
     public function handle(Request $request, Closure $next, $guard = null): Response
     {
         $token = $request->bearerToken();
-        
+
         if (!$token) {
             return $this->unauthorizedResponse('未提供认证令牌');
         }
@@ -30,19 +30,18 @@ abstract class BaseAuthMiddleware
         $tokenHash = hash('sha256', $token);
         $cacheKey = self::CACHE_PREFIX . $tokenHash;
 
-        $user = Cache::get($cacheKey);
-        
-        if (!$user) {
+        $user = Cache::remember($cacheKey, self::CACHE_TTL, function () use ($token) {
             $accessToken = PersonalAccessToken::findToken($token);
-            
+
             if (!$accessToken || !$accessToken->tokenable) {
-                return $this->unauthorizedResponse('令牌无效或已过期');
+                return null;
             }
 
-            $user = $accessToken->tokenable;
-            
-            // 缓存用户信息
-            Cache::put($cacheKey, $user, self::CACHE_TTL);
+            return $accessToken->tokenable;
+        });
+
+        if (!$user) {
+            return $this->unauthorizedResponse('令牌无效或已过期');
         }
 
         if (!$this->checkLevel($user)) {
