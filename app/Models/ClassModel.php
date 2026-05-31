@@ -91,7 +91,7 @@ class ClassModel extends Model
         $query = self::query();
 
         if (!empty($queryWord)) {
-            $query->where('class_name', 'like', $queryWord . '%');
+            $query->where('class_name', 'like', '%' . $queryWord . '%');
         }
 
         return $query->skip($queryCount)
@@ -120,7 +120,7 @@ class ClassModel extends Model
         $query = self::query();
 
         if (!empty($queryWord)) {
-            $query->where('class_name', 'like', $queryWord . '%');
+            $query->where('class_name', 'like', '%' . $queryWord . '%');
         }
 
         return $query->orderBy($sortField, $sortMode)
@@ -182,7 +182,7 @@ class ClassModel extends Model
             $query = self::query();
 
             if (!empty($queryWord)) {
-                $query->where('class_name', 'like', $queryWord . '%');
+                $query->where('class_name', 'like', '%' . $queryWord . '%');
             }
 
             return $query->count();
