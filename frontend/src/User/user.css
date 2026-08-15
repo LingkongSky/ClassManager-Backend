@@ -1,0 +1,56 @@
+body {
+    margin: 0;
+}
+
+#user_title {
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    justify-content: center;
+    vertical-align: middle;
+    position: relative;
+    transform: translateX(-50%);
+    user-select: none;
+    word-break: keep-all;
+}
+
+.card_p {
+    margin-top: 0;
+}
+
+
+
+/*pc*/
+@media (min-width: 768px) {
+    #ClassListForm {
+        width: 13vw;
+    }
+
+    #UserCenterFlex {
+        width: 20vw;
+    }
+
+    #user_title {
+        left: 50%;
+    }
+}
+
+
+/*mobile*/
+@media (max-width: 767px) {
+    #ClassListForm {
+        width: 30vw;
+    }
+
+    .ant-pro-table {
+        overflow-x: scroll;
+    }
+
+    #mail_button {
+        transform: translateX(-100%);
+        left: 50%;
+    }
+
+    #user_title {
+        left: 1em;
+    }
+}

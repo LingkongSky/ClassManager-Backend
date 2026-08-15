@@ -13,7 +13,10 @@ use App\Http\Requests\Todos\SubmitRequest;
 use App\Http\Requests\Todos\DeleteRequest;
 use App\Http\Requests\Todos\DeleteAdminRequest;
 use App\Utils\ResponseTool;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use RuntimeException;
 
 class TodosEditController extends Controller
 {
@@ -35,15 +38,11 @@ class TodosEditController extends Controller
         $name = $request->user()->name;
         $newName = "{$className} {$name} {$account}.{$extension}";
 
-        // 提交作业
-        Homework::submitHomework($activity->activity_id, $request->user()->account, $activity->class_id, $newName);
-
-        // 移动作业
-        $file->storeAs(
-            "{$activity->activity_id}/{$activity->class_id}",
-            $newName,
-            'homework'
-        );
+        try {
+            $this->storeHomeworkSubmission($activity, $request->user()->account, $newName, $file);
+        } catch (RuntimeException $exception) {
+            return ResponseTool::jsonResponse(1, $exception->getMessage(), null, 500);
+        }
 
         HomeworkLog::log($request->user()->account, $newName, $activity->class_id, $request->input('activity_id'), 'submit', $request->ip());
 
@@ -68,15 +67,11 @@ class TodosEditController extends Controller
         $accountName = Student::getName($targetAccount);
         $newName = "{$className} {$accountName} {$targetAccount}.{$extension}";
 
-        // 提交作业
-        Homework::submitHomework($activity->activity_id, $targetAccount, $activity->class_id, $newName);
-
-        // 移动文件
-        $file->storeAs(
-            "{$activity->activity_id}/{$activity->class_id}",
-            $newName,
-            'homework'
-        );
+        try {
+            $this->storeHomeworkSubmission($activity, $targetAccount, $newName, $file);
+        } catch (RuntimeException $exception) {
+            return ResponseTool::jsonResponse(1, $exception->getMessage(), null, 500);
+        }
 
         HomeworkLog::log($request->user()->account, $newName, $activity->class_id, $request->input('activity_id'), "Admin submit {$targetAccount}", $request->ip());
 
@@ -99,15 +94,11 @@ class TodosEditController extends Controller
             return ResponseTool::jsonResponse(1, 'failed', null);
         }
 
-        // 删除文件
         $filePath = "{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
-
-        $storage = Storage::disk('homework');
-        $storage->delete($filePath);
-        
-
-        // 删除提交
-        Homework::deleteSubmit($request->user()->account, $activity->activity_id);
+        DB::transaction(function () use ($request, $activity, $filePath) {
+            Homework::deleteSubmit($request->user()->account, $activity->activity_id);
+            DB::afterCommit(fn() => Storage::disk('homework')->delete($filePath));
+        });
 
         HomeworkLog::log($request->user()->account, $homework->file_name, $activity->class_id, $request->input('activity_id'), 'delete', $request->ip());
 
@@ -127,18 +118,68 @@ class TodosEditController extends Controller
             return ResponseTool::jsonResponse(1, 'failed', null);
         }
 
-        // 删除文件
         $filePath = "{$activity->activity_id}/{$activity->class_id}/{$homework->file_name}";
-
-        $storage = Storage::disk('homework');
-        $storage->delete($filePath);
-        
-
-        // 删除提交
-        Homework::deleteSubmit($targetAccount, $activity->activity_id);
+        DB::transaction(function () use ($targetAccount, $activity, $filePath) {
+            Homework::deleteSubmit($targetAccount, $activity->activity_id);
+            DB::afterCommit(fn() => Storage::disk('homework')->delete($filePath));
+        });
 
         HomeworkLog::log($request->user()->account, $homework->file_name, $activity->class_id, $request->input('activity_id'), "Admin delete {$targetAccount}", $request->ip());
 
         return ResponseTool::jsonResponse(0, 'success', null);
+    }
+
+    private function storeHomeworkSubmission(Activity $activity, string $account, string $newName, $file): void
+    {
+        $storage = Storage::disk('homework');
+        $operationId = (string) Str::uuid();
+        $stagingDirectory = ".staging/{$operationId}";
+        $backupDirectory = ".backups/{$operationId}";
+        $targetDirectory = "{$activity->activity_id}/{$activity->class_id}";
+        $targetPath = "{$targetDirectory}/{$newName}";
+        $oldHomework = Homework::getSubmitInfo($account, $activity->activity_id);
+        $oldPath = $oldHomework
+            ? "{$activity->activity_id}/{$activity->class_id}/{$oldHomework->file_name}"
+            : null;
+        $oldFileMoved = false;
+        $newFileMoved = false;
+
+        try {
+            $staged = $file->storeAs($stagingDirectory, $newName, 'homework');
+            if ($staged === false) {
+                throw new RuntimeException('作业文件暂存失败');
+            }
+
+            if ($oldPath && $storage->exists($oldPath)) {
+                if (!$storage->move($oldPath, $backupDirectory . '/' . basename($oldPath))) {
+                    throw new RuntimeException('旧作业文件备份失败');
+                }
+                $oldFileMoved = true;
+            }
+
+            if (!$storage->move($staged, $targetPath)) {
+                throw new RuntimeException('作业文件保存失败');
+            }
+            $newFileMoved = true;
+
+            DB::transaction(function () use ($activity, $account, $newName) {
+                Homework::submitHomework($activity->activity_id, $account, $activity->class_id, $newName);
+            });
+
+            $storage->deleteDirectory($backupDirectory);
+        } catch (\Throwable $exception) {
+            if ($newFileMoved) {
+                $storage->delete($targetPath);
+            }
+            if ($oldFileMoved && $oldPath) {
+                foreach ($storage->files($backupDirectory) as $backupFile) {
+                    $storage->move($backupFile, $oldPath);
+                }
+            }
+            throw new RuntimeException($exception->getMessage(), 0, $exception);
+        } finally {
+            $storage->deleteDirectory($stagingDirectory);
+            $storage->deleteDirectory($backupDirectory);
+        }
     }
 }

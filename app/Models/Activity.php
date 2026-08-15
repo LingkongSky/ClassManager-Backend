@@ -120,6 +120,42 @@ class Activity extends Model
         return self::where('activity_id', $activityId)->value('class_id');
     }
 
+    public static function deleteWithRelations(string $activityId): bool
+    {
+        return DB::transaction(function () use ($activityId) {
+            if (!self::where('activity_id', $activityId)->exists()) {
+                return false;
+            }
+
+            self::deleteRelatedRecords([$activityId]);
+            DB::afterCommit(fn() => self::deleteStoredFiles([$activityId]));
+
+            return true;
+        });
+    }
+
+    public static function deleteRelatedRecords(array $activityIds): void
+    {
+        $activityIds = array_values(array_unique(array_filter($activityIds)));
+        if (empty($activityIds)) {
+            return;
+        }
+
+        DB::table('homework')->whereIn('activity_id', $activityIds)->delete();
+        DB::table('homework_logs')->whereIn('activity_id', $activityIds)->delete();
+        DB::table('activity_logs')->whereIn('activity_id', $activityIds)->delete();
+        self::whereIn('activity_id', $activityIds)->delete();
+    }
+
+    public static function deleteStoredFiles(array $activityIds): void
+    {
+        foreach (array_unique(array_filter($activityIds)) as $activityId) {
+            foreach (['publish', 'homework', 'temp', 'output'] as $disk) {
+                Storage::disk($disk)->deleteDirectory((string) $activityId);
+            }
+        }
+    }
+
     public static function getActivityProgress($activityId)
     {
         // 一次性获取班级ID

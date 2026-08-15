@@ -191,6 +191,7 @@ class Student extends Authenticatable
         array $classIds,
         ?int $level = 0,
         ?string $permissionsGroupId = null,
+        ?string $primaryClassId = null,
     ) {
         if ($this->level < 10) {
             $permissionsGroup = $this->getPermissionsGroup();
@@ -215,6 +216,13 @@ class Student extends Authenticatable
                 }
             }
 
+            if ($primaryClassId !== null && !in_array($primaryClassId, $classIds, true)) {
+                return [
+                    'success' => false,
+                    'message' => '主班级必须包含在班级列表中',
+                ];
+            }
+
             if ($permissionsGroupId) {
                 if (!PermissionsGroup::where('group_id', $permissionsGroupId)->exists()) {
                     return [
@@ -231,22 +239,23 @@ class Student extends Authenticatable
                 ];
             }
 
-            $student = new self();
-            $student->account = $account;
-            $student->name = $name;
-            $student->password = self::hashPassword($password);
+            DB::transaction(function () use ($account, $name, $password, $classIds, $level, $permissionsGroupId, $primaryClassId) {
+                $student = new self();
+                $student->account = $account;
+                $student->name = $name;
+                $student->password = self::hashPassword($password);
 
-            if ($level !== null) {
-                $student->level = $level;
-            }
+                if ($level !== null) {
+                    $student->level = $level;
+                }
 
-            if ($permissionsGroupId !== null) {
-                $student->permissions_group_id = $permissionsGroupId;
-            }
+                if ($permissionsGroupId !== null) {
+                    $student->permissions_group_id = $permissionsGroupId;
+                }
 
-            $student->save();
-
-            self::syncStudentClasses($student->id, $classIds);
+                $student->save();
+                self::syncStudentClasses($student->id, $classIds, $primaryClassId);
+            });
             ClassModel::updateClassStatus();
 
             return [
@@ -413,16 +422,16 @@ class Student extends Authenticatable
 
     public static function editAdminPassword(string $account, string $password)
     {
-        $affected = self::where('account', $account)
+        $student = self::where('account', $account)
             ->where('level', 5)
-            ->update(['password' => self::hashPassword($password)]);
-
-        if ($affected === 0) {
+            ->first();
+        if (!$student) {
             return [
                 'success' => false,
                 'message' => '管理员账号不存在',
             ];
         }
+        $student->update(['password' => self::hashPassword($password)]);
 
         return [
             'success' => true,
@@ -436,15 +445,14 @@ class Student extends Authenticatable
             return null;
         }
 
-        $affected = self::where('account', $account)
-            ->update(['password' => self::hashPassword($password)]);
-
-        if ($affected === 0) {
+        $student = self::where('account', $account)->first();
+        if (!$student) {
             return [
                 'success' => false,
                 'message' => '账号不存在',
             ];
         }
+        $student->update(['password' => self::hashPassword($password)]);
 
         return [
             'success' => true,
@@ -562,18 +570,17 @@ class Student extends Authenticatable
                 ];
             }
 
-            $affected = self::where('account', $account)
-                ->update([
-                    'permissions_group_id' => $permissionGroupId,
-                    'level' => 5,
-                ]);
-
-            if ($affected === 0) {
+            $student = self::where('account', $account)->first();
+            if (!$student) {
                 return [
                     'success' => false,
                     'message' => '用户不存在',
                 ];
             }
+            $student->update([
+                'permissions_group_id' => $permissionGroupId,
+                'level' => 5,
+            ]);
 
             return [
                 'success' => true,

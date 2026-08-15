@@ -7,10 +7,21 @@ use App\Http\Requests\Request;
 
 class AddRequest extends Request
 {
+    protected function prepareForValidation(): void
+    {
+        $classList = $this->input('class_list');
+        if (is_string($classList)) {
+            $decoded = json_decode($classList, true);
+            $this->merge(['class_list' => is_array($decoded) ? $decoded : null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'class_list' => 'required|string|max:9999',
+            'class_list' => 'required|array|min:1|max:500',
+            'class_list.*' => 'required|array',
+            'class_list.*.class_name' => 'required|string|max:20',
         ];
     }
 
@@ -23,27 +34,10 @@ class AddRequest extends Request
 
     public function passedValidation(): void
     {
-        $input = $this->all();
-
-        $class_list = json_decode($input["class_list"], true);
-
-        if ($class_list === null && json_last_error() !== JSON_ERROR_NONE) {
-            return;
-        }
-
-        if (!is_array($class_list)) {
-            return;
-        }
-
-        // 遍历并处理每个元素
-        foreach ($class_list as &$item) {
-            if (isset($item["class_name"])) {
-                $class_name = RequestTool::xxs($item["class_name"]);
-                $item["class_name"] = $class_name;
-            }
-        }
-
-        $input["class_list"] = $class_list;
-        $this->replace($input);
+        parent::passedValidation();
+        $classList = array_map(fn(array $item) => [
+            'class_name' => RequestTool::xxs($item['class_name']),
+        ], $this->input('class_list'));
+        $this->merge(['class_list' => $classList]);
     }
 }

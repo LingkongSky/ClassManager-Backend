@@ -7,10 +7,20 @@ use App\Http\Requests\Request;
 
 class DeleteRequest extends Request
 {
+    protected function prepareForValidation(): void
+    {
+        $studentList = $this->input('student_list');
+        if (is_string($studentList)) {
+            $decoded = json_decode($studentList, true);
+            $this->merge(['student_list' => is_array($decoded) ? $decoded : null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'student_list' => 'required|string|max:40960',
+            'student_list' => 'required|array|min:1|max:500',
+            'student_list.*' => 'required|string|max:20',
         ];
     }
 
@@ -23,25 +33,12 @@ class DeleteRequest extends Request
 
     public function passedValidation(): void
     {
-        $input = $this->all();
-
-        $student_list = json_decode($input["student_list"], true);
-
-        if ($student_list === null && json_last_error() !== JSON_ERROR_NONE) {
-            return;
-        }
-
-        if (!is_array($student_list)) {
-            return;
-        }
-
-        // 遍历并处理每个元素
-        foreach ($student_list as &$item) {
-            $account = RequestTool::xxs($item);
-            $item = $account;
-        }
-
-        $input["student_list"] = $student_list;
-        $this->replace($input);
+        parent::passedValidation();
+        $this->merge([
+            'student_list' => array_map(
+                fn(string $item) => RequestTool::xxs($item),
+                $this->input('student_list')
+            ),
+        ]);
     }
 }

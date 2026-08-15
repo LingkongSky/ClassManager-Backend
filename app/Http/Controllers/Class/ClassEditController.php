@@ -11,6 +11,8 @@ use App\Models\ClassModel;
 use App\Models\Student;
 use Illuminate\Support\Facades\DB;
 use App\Utils\ResponseTool;
+use App\Utils\NumericId;
+use DomainException;
 
 class ClassEditController extends Controller
 {
@@ -18,11 +20,18 @@ class ClassEditController extends Controller
     public function add(AddRequest $request)
     {
         $classList = $request->input("class_list");
-        $i = 0;
-
-        foreach ($classList as $item) {
-            $time = time() . $i;
-            ClassModel::addClass($time, $item["class_name"]);
+        try {
+            DB::transaction(function () use ($classList) {
+                foreach ($classList as $item) {
+                    $classId = NumericId::generate(fn(string $id) => ClassModel::where('class_id', $id)->exists());
+                    $result = ClassModel::addClass($classId, $item['class_name']);
+                    if (is_array($result) && !($result['success'] ?? false)) {
+                        throw new DomainException($result['message'] ?? '创建班级失败', 422);
+                    }
+                }
+            });
+        } catch (DomainException $exception) {
+            return ResponseTool::jsonResponse(1, $exception->getMessage(), null, $exception->getCode());
         }
 
         return ResponseTool::jsonResponse(0, 'success', null);
@@ -33,8 +42,17 @@ class ClassEditController extends Controller
     {
         $classList = $request->input("class_list");
 
-        foreach ($classList as $item) {
-            ClassModel::deleteClass($item);
+        try {
+            DB::transaction(function () use ($classList) {
+                foreach (array_unique($classList) as $item) {
+                    $result = ClassModel::deleteClass($item);
+                    if (!($result['success'] ?? false)) {
+                        throw new DomainException($result['message'] ?? '删除班级失败', 422);
+                    }
+                }
+            });
+        } catch (DomainException $exception) {
+            return ResponseTool::jsonResponse(1, $exception->getMessage(), null, $exception->getCode());
         }
 
         return ResponseTool::jsonResponse(0, 'success', null);
@@ -45,7 +63,10 @@ class ClassEditController extends Controller
     {
         $classId = $request->input('class_id');
         $className = $request->input('class_name');
-        ClassModel::editClass($classId, $className);
+        $result = ClassModel::editClass($classId, $className);
+        if (!($result['success'] ?? false)) {
+            return ResponseTool::jsonResponse(1, $result['message'] ?? '修改班级失败', null, 422);
+        }
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 

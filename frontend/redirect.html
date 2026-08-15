@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="favicon.ico">
+    <script defer src="https://umami.kazeline.com/script.js"
+        data-website-id="4ca5c8bb-de9b-44a4-9ee2-14394bb2f0bd"></script>
+</head>
+
+<body>
+    <div id="root">
+
+        <h2>请复制链接或转跳到外部浏览器以打开</h4>
+
+    </div>
+
+    <style>
+        #root h2 {
+            text-align: center;
+            top: 50%;
+            left: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 80%;
+        }
+
+        body {
+            background-color: azure;
+        }
+    </style>
+
+    <script>
+        if (!(navigator.userAgent.toLocaleLowerCase().indexOf("micromessenger") > -1 || (navigator.userAgent.indexOf("MQQBrowser") > -1 || navigator.userAgent.indexOf("QQTheme") > -1)))
+            window.location.href = "./login.html";
+
+    </script>
+
+</body>
+
+</html>

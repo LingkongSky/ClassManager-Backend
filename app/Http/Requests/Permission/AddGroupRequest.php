@@ -7,10 +7,22 @@ use App\Http\Requests\Request;
 
 class AddGroupRequest extends Request
 {
+    protected function prepareForValidation(): void
+    {
+        $groupList = $this->input('permissions_group_list');
+        if (is_string($groupList)) {
+            $decoded = json_decode($groupList, true);
+            $this->merge(['permissions_group_list' => is_array($decoded) ? $decoded : null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'permissions_group_list' => 'required|string|max:40960',
+            'permissions_group_list' => 'required|array|min:1|max:500',
+            'permissions_group_list.*' => 'required|array',
+            'permissions_group_list.*.name' => 'required|string|max:40',
+            'permissions_group_list.*.target' => 'required|string|max:9999',
         ];
     }
 
@@ -23,27 +35,11 @@ class AddGroupRequest extends Request
 
     public function passedValidation(): void
     {
-        $input = $this->all();
-
-        $permissions_group_list = json_decode($input["permissions_group_list"], true);
-
-        if ($permissions_group_list === null && json_last_error() !== JSON_ERROR_NONE) {
-            return;
-        }
-
-        if (!is_array($permissions_group_list)) {
-            return;
-        }
-
-        // 遍历并处理每个元素
-        foreach ($permissions_group_list as &$item) {
-            if (isset($item["name"]) && isset($item["target"])) {
-                $item["name"] =  RequestTool::xxs($item["name"]);
-                $item["target"] =  RequestTool::xxs($item["target"]);
-            }
-        }
-
-        $input["permissions_group_list"] = $permissions_group_list;
-        $this->replace($input);
+        parent::passedValidation();
+        $groupList = array_map(fn(array $item) => [
+            'name' => RequestTool::xxs($item['name']),
+            'target' => RequestTool::xxs($item['target']),
+        ], $this->input('permissions_group_list'));
+        $this->merge(['permissions_group_list' => $groupList]);
     }
 }

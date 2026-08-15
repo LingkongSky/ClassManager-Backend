@@ -2,17 +2,34 @@
 
 namespace App\Http\Requests\User;
 
-use App\Utils\ResponseTool;
 use App\Utils\RequestTool;
 use App\Http\Requests\Request;
-use Illuminate\Http\Exceptions\HttpResponseException;
 
 class AddRequest extends Request
 {
+    protected function prepareForValidation(): void
+    {
+        $data = $this->input('data');
+        if (is_string($data)) {
+            $decoded = json_decode($data, true);
+            if (is_array($decoded) && isset($decoded['account'], $decoded['name'])) {
+                $decoded = [$decoded];
+            }
+            $this->merge(['data' => is_array($decoded) ? $decoded : null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'data' => 'required|string|max:409600',
+            'data' => 'required|array|min:1|max:500',
+            'data.*' => 'required|array',
+            'data.*.name' => 'required|string|max:10',
+            'data.*.account' => 'required|string|max:20',
+            'data.*.password' => 'required|string|max:99',
+            'data.*.class_ids' => 'required|array|min:1',
+            'data.*.class_ids.*' => 'required|string|max:20',
+            'data.*.primary_class_id' => 'required|string|max:20',
         ];
     }
 
@@ -25,50 +42,33 @@ class AddRequest extends Request
 
     public function passedValidation(): void
     {
-        $input = $this->all();
-
-        $data = json_decode($input["data"], true);
-
-        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
-            return;
-        }
-
-        if (!is_array($data)) {
-            return;
-        }
-
-        // 兼容单对象提交：统一包装成数组
-        if (isset($data['account']) && isset($data['name'])) {
-            $data = [$data];
-        }
-
-        // 遍历并处理每个元素
+        parent::passedValidation();
+        $data = $this->input('data');
         foreach ($data as &$item) {
-            if (!is_array($item)) {
-                continue;
-            }
-            if (isset($item["name"]) && isset($item["account"]) && isset($item["password"]) && isset($item["class_ids"])) {
-                $item["name"] =  RequestTool::xxs($item["name"]);
-                $item["account"] =  RequestTool::xxs($item["account"]);
-                $item["password"] =  RequestTool::xxs($item["password"]);
-                $item["class_ids"] = array_map(fn($classId) => RequestTool::xxs($classId), $item["class_ids"]);
-                $item["primary_class_id"] = RequestTool::xxs($item["primary_class_id"] ?? ($item["class_ids"][0] ?? ''));
+            $item['name'] = RequestTool::xxs($item['name']);
+            $item['account'] = RequestTool::xxs($item['account']);
+            $item['password'] = RequestTool::xxs($item['password']);
+            $item['class_ids'] = array_values(array_unique(array_map(
+                fn(string $classId) => RequestTool::xxs($classId),
+                $item['class_ids']
+            )));
+            $item['primary_class_id'] = RequestTool::xxs($item['primary_class_id']);
+        }
+        unset($item);
+        $this->merge(['data' => $data]);
+    }
 
-                // 仅一个班级时，主班级必须与该班级一致
-                if (count($item["class_ids"]) === 1 && $item["primary_class_id"] !== $item["class_ids"][0]) {
-                    throw new HttpResponseException(
-                        ResponseTool::jsonResponse(
-                            1,
-                            '仅有一个班级时，主班级必须与班级一致',
-                            ['errors' => ['primary_class_id' => ['仅有一个班级时，主班级必须与班级一致']]],
-                            422
-                        )
-                    );
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            foreach ($this->input('data', []) as $index => $item) {
+                if (is_array($item)
+                    && isset($item['primary_class_id'], $item['class_ids'])
+                    && is_array($item['class_ids'])
+                    && !in_array($item['primary_class_id'], $item['class_ids'], true)) {
+                    $validator->errors()->add("data.{$index}.primary_class_id", '主班级必须包含在班级列表中');
                 }
             }
-        }
-
-        $input["data"] = $data;
-        $this->replace($input);
+        });
     }
 }

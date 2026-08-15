@@ -1,62 +1,66 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ClassManager
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+ClassManager 现在是一个 monorepo：Laravel 后端位于仓库根目录，React + Vite 前端位于 `frontend/`。
 
-## About Laravel
+## 本地开发
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+需要 PHP 8.2+、Composer、Node.js、MySQL 和 Redis。
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+npm run dev
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+`npm run dev` 会同时启动：
 
-## Learning Laravel
+- 前端：http://127.0.0.1:5173
+- 后端：http://127.0.0.1:8001
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Vite 会把 `/api`、`/storage` 和 `/Docs` 转发到 Laravel。按一次 `Ctrl+C` 会同时关闭前后端；任意一方退出时，另一方也会自动停止。`composer dev` 等价于 `npm run dev`。
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+常用命令：
 
-## Laravel Sponsors
+```bash
+npm run build       # 构建前端
+npm run lint        # 检查前端
+composer test       # 运行后端测试
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Docker 部署
 
-### Premium Partners
+容器内由 Nginx 提供前端静态文件，并把 `/api` 转发给 PHP-FPM。只有一个应用容器、一个对外端口；MySQL 和 Redis 继续使用 `.env` 中配置的外部服务。
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+先创建应用配置：
 
-## Contributing
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+按需修改 `.env`：
 
-## Code of Conduct
+- `APP_PORT`：宿主机端口，默认 `8080`
+- `DOCKER_DB_HOST`：容器访问的 MySQL 主机，默认 `host.docker.internal`
+- `DOCKER_REDIS_HOST`：容器访问的 Redis 主机，默认 `host.docker.internal`
+- `ACTIVITY_FILES_PATH`：活动文件的宿主机目录，默认 `./storage/files/activity`
+- `DOCKER_APP_URL`：外部访问地址，默认 `http://localhost:8080`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+启动：
 
-## Security Vulnerabilities
+```bash
+docker compose up -d --build
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+应用默认访问地址是 http://localhost:8080，健康检查地址是 http://localhost:8080/api/ping。
 
-## License
+活动发布文件、学生提交、临时文件和导出文件统一存储在容器的 `/var/www/html/storage/files/activity`，并映射到 `ACTIVITY_FILES_PATH`。重新构建或替换容器不会删除宿主机中的这些文件。数据库和 Redis 数据的持久化由对应的外部服务负责。
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+如需执行迁移：
 
-## Other
-- Use <code>php tools/hash_password password</code> to get password hash with .env key.
+```bash
+docker compose exec app php artisan migrate --force
+```

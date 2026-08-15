@@ -29,6 +29,13 @@ return new class extends Migration
                 throw new RuntimeException("存在 {$missingMappings} 条学生班级未完成映射，禁止删除 student.class_id。");
             }
 
+            // SQLite 不会在删除字段时自动移除相关索引；MySQL 显式删除也更可控。
+            Schema::table('student', function (Blueprint $table) {
+                $table->dropIndex(['class_id']);
+                $table->dropIndex(['class_id', 'level']);
+                $table->dropIndex(['class_id', 'date']);
+            });
+
             Schema::table('student', function (Blueprint $table) {
                 $table->dropColumn('class_id');
             });

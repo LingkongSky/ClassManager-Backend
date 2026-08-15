@@ -7,10 +7,20 @@ use App\Http\Requests\Request;
 
 class DeleteAdminRequest extends Request
 {
+    protected function prepareForValidation(): void
+    {
+        $adminList = $this->input('admin_list');
+        if (is_string($adminList)) {
+            $decoded = json_decode($adminList, true);
+            $this->merge(['admin_list' => is_array($decoded) ? $decoded : null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'admin_list' => 'required|string|max:40960',
+            'admin_list' => 'required|array|min:1|max:500',
+            'admin_list.*' => 'required|string|max:20',
         ];
     }
 
@@ -23,24 +33,12 @@ class DeleteAdminRequest extends Request
 
     public function passedValidation(): void
     {
-        $input = $this->all();
-
-        $admin_list = json_decode($input["admin_list"], true);
-
-        if ($admin_list === null && json_last_error() !== JSON_ERROR_NONE) {
-            return;
-        }
-
-        if (!is_array($admin_list)) {
-            return;
-        }
-
-        // 遍历并处理每个元素
-        foreach ($admin_list as &$item) {
-            $item = RequestTool::xxs($item);
-        }
-
-        $input["admin_list"] = $admin_list;
-        $this->replace($input);
+        parent::passedValidation();
+        $this->merge([
+            'admin_list' => array_map(
+                fn(string $item) => RequestTool::xxs($item),
+                $this->input('admin_list')
+            ),
+        ]);
     }
 }

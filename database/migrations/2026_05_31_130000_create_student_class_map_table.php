@@ -16,7 +16,10 @@ return new class extends Migration
         Schema::create('student_class_map', function (Blueprint $table) {
             $table->id();
             $table->integer('student_id');
-            $table->string('class_id', 20)->collation('utf8mb4_general_ci');
+            $classId = $table->string('class_id', 20);
+            if (DB::getDriverName() === 'mysql') {
+                $classId->collation('utf8mb4_general_ci');
+            }
             $table->boolean('is_primary')->default(false);
             $table->timestamp('created_at')->nullable();
 
@@ -27,14 +30,20 @@ return new class extends Migration
 
         // 数据转换：把旧 student.class_id 回填为映射表主班级
         DB::transaction(function () {
-            // 仅回填存在于 class 表中的合法班级，避免脏映射写入
-            DB::statement("
-                INSERT INTO student_class_map (student_id, class_id, is_primary, created_at)
-                SELECT s.id, s.class_id, 1, NOW()
-                FROM student s
-                INNER JOIN class c ON c.class_id = s.class_id
-                WHERE s.class_id IS NOT NULL AND s.class_id <> ''
-            ");
+            // 仅回填存在于 class 表中的合法班级，避免脏映射写入。
+            DB::table('student_class_map')->insertUsing(
+                ['student_id', 'class_id', 'is_primary', 'created_at'],
+                DB::table('student as s')
+                    ->join('class as c', 'c.class_id', '=', 's.class_id')
+                    ->whereNotNull('s.class_id')
+                    ->where('s.class_id', '<>', '')
+                    ->select([
+                        's.id',
+                        's.class_id',
+                        DB::raw('1'),
+                        DB::raw('CURRENT_TIMESTAMP'),
+                    ])
+            );
         });
     }
 

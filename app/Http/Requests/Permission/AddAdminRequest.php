@@ -7,10 +7,20 @@ use App\Http\Requests\Request;
 
 class AddAdminRequest extends Request
 {
+    protected function prepareForValidation(): void
+    {
+        $data = $this->input('data');
+        if (is_string($data)) {
+            $decoded = json_decode($data, true);
+            $this->merge(['data' => is_array($decoded) ? $decoded : null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'data' => 'required|string|max:40960',
+            'data' => 'required|array|min:1|max:500',
+            'data.*' => 'required|array',
             'data.*.name' => 'required|string|max:10',
             'data.*.account' => 'required|string|max:20',
             'data.*.password' => 'required|string|min:2|max:99',
@@ -40,20 +50,8 @@ class AddAdminRequest extends Request
 
     public function passedValidation(): void
     {
-        $input = $this->all();
-
-        // 解码前端发送的JSON数据
-        $data = json_decode($input["data"], true);
-
-        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
-            $this->replace(['data' => []]);
-            return;
-        }
-
-        if (!is_array($data)) {
-            $this->replace(['data' => []]);
-            return;
-        }
+        parent::passedValidation();
+        $data = $this->input('data');
 
         // 处理每个管理员数据
         foreach ($data as &$admin) {
@@ -63,30 +61,33 @@ class AddAdminRequest extends Request
             if (isset($admin["class_id"])) {
                 $admin["class_id"] = RequestTool::xxs($admin["class_id"]);
             }
-            $classIds = $admin["class_ids"] ?? [];
-            if (!is_array($classIds)) {
-                $classIds = [];
-            }
+            $classIds = $admin['class_ids'] ?? [];
             $classIds = array_values(array_unique(array_filter(array_map(
                 fn($item) => is_string($item) ? RequestTool::xxs($item) : '',
                 $classIds
             ))));
-            if (empty($classIds) && !empty($admin["class_id"])) {
-                $classIds = [$admin["class_id"]];
-            }
             $admin["class_ids"] = $classIds;
-            $admin["primary_class_id"] = RequestTool::xxs($admin["primary_class_id"] ?? ($classIds[0] ?? ''));
-            if (!empty($admin["primary_class_id"]) && in_array($admin["primary_class_id"], $classIds, true)) {
-                $admin["class_ids"] = array_values(array_unique([
-                    $admin["primary_class_id"],
-                    ...$classIds
-                ]));
-            }
+            $admin["primary_class_id"] = RequestTool::xxs($admin["primary_class_id"] ?? '');
             $admin["permissions_group_id"] = RequestTool::xxs($admin["permissions_group_id"]);
         }
 
-        $input["data"] = $data;
-        $this->replace($input);
+        unset($admin);
+        $this->merge(['data' => $data]);
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            foreach ($this->input('data', []) as $index => $item) {
+                if (is_array($item)
+                    && !empty($item['primary_class_id'])
+                    && isset($item['class_ids'])
+                    && is_array($item['class_ids'])
+                    && !in_array($item['primary_class_id'], $item['class_ids'], true)) {
+                    $validator->errors()->add("data.{$index}.primary_class_id", '主班级必须包含在班级列表中');
+                }
+            }
+        });
     }
 
     /**

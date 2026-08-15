@@ -40,6 +40,15 @@ class PermissionsGroup extends Model
     public static function addGroup(string $groupId, string $name, string $target): Model|array
     {
 
+        $targets = array_values(array_unique(array_filter(explode('|', $target))));
+        if (empty($targets) || ClassModel::whereIn('class_id', $targets)->count() !== count($targets)) {
+            return [
+                'success' => false,
+                'message' => '权限组包含不存在的班级',
+            ];
+        }
+        $target = implode('|', $targets);
+
         if (self::where('group_id', $groupId)->exists()) {
             return [
                 'success' => false,
@@ -97,6 +106,13 @@ class PermissionsGroup extends Model
     public static function deleteGroup(string $groupId): array
     {
         try {
+            if (Student::where('permissions_group_id', $groupId)->exists()) {
+                return [
+                    'success' => false,
+                    'message' => '权限组仍被管理员使用，无法删除'
+                ];
+            }
+
             $deleted = self::where('group_id', $groupId)->delete();
 
             if ($deleted) {
@@ -157,24 +173,32 @@ class PermissionsGroup extends Model
             ];
         }
 
-        try {
-            $affected = self::where('group_id', $permissionsGroupId)
-                ->update([
-                    'name' => $permissionsGroupName,
-                    'target' => $classList
-                ]);
+        $targets = array_values(array_unique(array_filter(explode('|', $classList))));
+        if (empty($targets) || ClassModel::whereIn('class_id', $targets)->count() !== count($targets)) {
+            return [
+                'success' => false,
+                'message' => '权限组包含不存在的班级',
+            ];
+        }
 
-            if ($affected > 0) {
-                return [
-                    'success' => true,
-                    'message' => '权限组修改成功',
-                ];
-            } else {
+        try {
+            $group = self::where('group_id', $permissionsGroupId)->first();
+            if (!$group) {
                 return [
                     'success' => false,
                     'message' => '权限组不存在'
                 ];
             }
+
+            $group->update([
+                'name' => $permissionsGroupName,
+                'target' => implode('|', $targets)
+            ]);
+
+            return [
+                'success' => true,
+                'message' => '权限组修改成功',
+            ];
         } catch (\Exception $e) {
             return [
                 'success' => false,

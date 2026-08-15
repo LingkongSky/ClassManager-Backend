@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="UTF-8">
+  <title>风线学生交互平台</title>
+  <meta name="description" content="一个简单高效的班级作业管理面板" />
+  <meta name="keywords" content="班级, 作业, 管理, 平台, 面板" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" href="./src/vue.css">
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    window.$docsify = {
+      name: '风线学生交互平台',
+      repo: 'https://github.com/LingkongSky/',
+      loadSidebar: true,
+      coverpage: true,
+      subMaxLevel: 2,
+      subMaxLevel: 3,
+      // 小屏设备下合并导航栏到侧边栏
+      mergeNavbar: true,
+      auto2top: true,
+      //Latex设置
+      latex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$']],
+        customOptions: {}
+      },
+       search: {
+        maxAge: 10,
+        paths: 'auto',
+        placeholder: '搜索',
+        noData: '找不到结果',
+        depth: 4,
+        hideOtherSidebarContent: false,
+        namespace: '风线学生交互平台'
+      },
+      pagination: {
+        previousText: '上一章节',
+        nextText: '下一章节'
+      },
+       count: {
+        countable: true,
+        position: 'top',
+        margin: '10px',
+        float: 'right',
+        fontsize: '0.9em',
+        color: 'rgb(90,90,90)',
+        language: 'chinese',
+        isExpected: true
+      },
+      sidebarDisplayLevel: 2,
+      // 页脚信息插件
+      loadFooter: true,
+      loadFooter: '_footer.md'
+    }
+  </script>
+  <!-- Docsify v4 -->
+  <script src="./src/docsify@4.js"></script>
+  <script src="./src/search.min.js"></script>
+  <script src="./src/docsify-pagination.min.js"></script>
+  <script src="./src/countable.js"></script>
+  <script src="./src/docsify-plugin-flexible-alerts.min.js"></script>
+  <!-- 侧边栏扩展与折叠 -->
+  <script src="./src/docsify-sidebar-collapse.min.js"></script>
+  <!-- 页脚信息 -->
+  <script src="./src/docsify-footer.min.js"></script>
+  <script src="./src/zoom-image.min.js"></script>
+  <script src="./src/emoji.min.js"></script>
+    <div>
+
+</body>
+</html>

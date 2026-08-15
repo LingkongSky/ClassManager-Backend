@@ -37,11 +37,14 @@ class ClassModel extends Model
                 ];
             }
 
-            return self::create([
+            $class = self::create([
                 'class_id' => $classId,
                 'class_name' => $className,
                 'student_count' => 0
             ]);
+            Cache::forget('all_classes_list');
+
+            return $class;
         } catch (\Exception $e) {
             return [
                 'success' => false,
@@ -54,9 +57,40 @@ class ClassModel extends Model
     public static function deleteClass(string $classId)
     {
         try {
-            $deleted = self::where('class_id', $classId)->delete();
+            $activityIds = [];
+            $deleted = DB::transaction(function () use ($classId, &$activityIds) {
+                if (!self::where('class_id', $classId)->exists()) {
+                    return 0;
+                }
+
+                $activityIds = Activity::where('class_id', $classId)
+                    ->pluck('activity_id')
+                    ->all();
+
+                Activity::deleteRelatedRecords($activityIds);
+                DB::table('homework')->where('class_id', $classId)->delete();
+                DB::table('homework_logs')->where('class_id', $classId)->delete();
+                DB::table('student_class_map')->where('class_id', $classId)->delete();
+
+                PermissionsGroup::query()->get()->each(function (PermissionsGroup $group) use ($classId) {
+                    $targets = array_values(array_filter(
+                        $group->getPermissionTarget(),
+                        fn(string $target) => $target !== $classId && $target !== ''
+                    ));
+                    if ($targets !== $group->getPermissionTarget()) {
+                        $group->update(['target' => implode('|', $targets)]);
+                    }
+                });
+
+                $deleted = self::where('class_id', $classId)->delete();
+                DB::afterCommit(fn() => Activity::deleteStoredFiles($activityIds));
+
+                return $deleted;
+            });
 
             if ($deleted > 0) {
+                Cache::forget('class_name_' . $classId);
+                Cache::forget('all_classes_list');
                 return [
                     'success' => true,
                     'message' => '班级删除成功'
@@ -144,26 +178,23 @@ class ClassModel extends Model
     public static function editClass(string $classId, string $newClassName): array
     {
         try {
-            $updated = self::where('class_id', $classId)
-                ->update(['class_name' => $newClassName]);
-
-            if ($updated > 0) {
-                Cache::forget('class_name_' . $classId);
-                Cache::forget('all_classes_list');
-
-                $class = self::where('class_id', $classId)->first();
-
-                return [
-                    'success' => true,
-                    'message' => '班级修改成功',
-                    'class' => $class
-                ];
-            } else {
+            $class = self::where('class_id', $classId)->first();
+            if (!$class) {
                 return [
                     'success' => false,
                     'message' => '班级不存在'
                 ];
             }
+
+            $class->update(['class_name' => $newClassName]);
+            Cache::forget('class_name_' . $classId);
+            Cache::forget('all_classes_list');
+
+            return [
+                'success' => true,
+                'message' => '班级修改成功',
+                'class' => $class->fresh()
+            ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
@@ -175,18 +206,13 @@ class ClassModel extends Model
     // 获取班级数量
     public static function getClassCount(?string $queryWord = ''): int
     {
-        $cacheKey = 'class_count_' . md5($queryWord ?? '');
-        $cacheTime = 300;
+        $query = self::query();
 
-        return Cache::remember($cacheKey, $cacheTime, function () use ($queryWord) {
-            $query = self::query();
+        if (!empty($queryWord)) {
+            $query->where('class_name', 'like', '%' . $queryWord . '%');
+        }
 
-            if (!empty($queryWord)) {
-                $query->where('class_name', 'like', '%' . $queryWord . '%');
-            }
-
-            return $query->count();
-        });
+        return $query->count();
     }
 
     // 更新班级的学生数量
@@ -200,11 +226,11 @@ class ClassModel extends Model
         }
 
         DB::statement("
-            UPDATE class c
+            UPDATE class
             SET student_count = (
                 SELECT COUNT(*) 
                 FROM student_class_map scm
-                WHERE scm.class_id = c.class_id
+                WHERE scm.class_id = class.class_id
             )
         ");
 

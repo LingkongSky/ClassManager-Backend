@@ -8,6 +8,8 @@ use App\Http\Requests\User\DeleteRequest;
 use App\Http\Requests\User\EditRequest;
 use App\Http\Requests\User\EditPasswordRequest;
 use App\Utils\ResponseTool;
+use DomainException;
+use Illuminate\Support\Facades\DB;
 
 class UserEditController extends Controller
 {
@@ -16,14 +18,29 @@ class UserEditController extends Controller
     public function add(AddRequest $request)
     {
         $studentList = $request->input("data");
-        foreach ($studentList as $item) {
-            $request->user()->createStudent(
-                $item['account'],
-                $item['name'],
-                $item['password'],
-                is_array($item['class_ids'] ?? null) ? $item['class_ids'] : [],
-            );
+        try {
+            DB::transaction(function () use ($request, $studentList) {
+                foreach ($studentList as $item) {
+                    $result = $request->user()->createStudent(
+                        $item['account'],
+                        $item['name'],
+                        $item['password'],
+                        $item['class_ids'],
+                        primaryClassId: $item['primary_class_id'],
+                    );
+
+                    if ($result === null) {
+                        throw new DomainException('无权限创建该班级的学生', 403);
+                    }
+                    if (!($result['success'] ?? false)) {
+                        throw new DomainException($result['message'] ?? '创建学生失败', 422);
+                    }
+                }
+            });
+        } catch (DomainException $exception) {
+            return ResponseTool::jsonResponse(1, $exception->getMessage(), null, $exception->getCode());
         }
+
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
@@ -32,11 +49,20 @@ class UserEditController extends Controller
     {
         $studentList = $request->input("student_list");
 
-        foreach ($studentList as $item) {
-            $result = $request->user()->deleteByAccount($item);
-            if ($result === null) {
-                return ResponseTool::jsonResponse(2, '无权限：仅可管理主班级在权限组内的学生', null, 403);
-            }
+        try {
+            DB::transaction(function () use ($request, $studentList) {
+                foreach ($studentList as $item) {
+                    $result = $request->user()->deleteByAccount($item);
+                    if ($result === null) {
+                        throw new DomainException('无权限：仅可管理主班级在权限组内的学生', 403);
+                    }
+                    if (!($result['success'] ?? false)) {
+                        throw new DomainException($result['message'] ?? '删除学生失败', 422);
+                    }
+                }
+            });
+        } catch (DomainException $exception) {
+            return ResponseTool::jsonResponse(2, $exception->getMessage(), null, $exception->getCode());
         }
 
         return ResponseTool::jsonResponse(0, 'success', null);
@@ -53,6 +79,9 @@ class UserEditController extends Controller
         if ($result === null) {
             return ResponseTool::jsonResponse(2, '无权限：仅可管理主班级在权限组内的学生', null, 403);
         }
+        if (!($result['success'] ?? false)) {
+            return ResponseTool::jsonResponse(1, $result['message'] ?? '修改用户失败', null, 422);
+        }
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
@@ -62,6 +91,9 @@ class UserEditController extends Controller
         $result = $request->user()->editPassword($request->input('account'), $request->input('password'));
         if ($result === null) {
             return ResponseTool::jsonResponse(2, '无权限：仅可管理主班级在权限组内的学生', null, 403);
+        }
+        if (!($result['success'] ?? false)) {
+            return ResponseTool::jsonResponse(1, $result['message'] ?? '修改密码失败', null, 422);
         }
         return ResponseTool::jsonResponse(0, 'success', null);
     }
