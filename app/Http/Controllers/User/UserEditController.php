@@ -21,7 +21,7 @@ class UserEditController extends Controller
                 $item['account'],
                 $item['name'],
                 $item['password'],
-                $item['class_id'],
+                is_array($item['class_ids'] ?? null) ? $item['class_ids'] : [],
             );
         }
         return ResponseTool::jsonResponse(0, 'success', null);
@@ -33,7 +33,10 @@ class UserEditController extends Controller
         $studentList = $request->input("student_list");
 
         foreach ($studentList as $item) {
-            $request->user()->deleteByAccount($item);
+            $result = $request->user()->deleteByAccount($item);
+            if ($result === null) {
+                return ResponseTool::jsonResponse(2, '无权限：仅可管理主班级在权限组内的学生', null, 403);
+            }
         }
 
         return ResponseTool::jsonResponse(0, 'success', null);
@@ -44,15 +47,22 @@ class UserEditController extends Controller
     {
         $account = $request->input('account');
         $name = $request->input('name');
-        $classId = $request->input('class_id');
-        $request->user()->edit($account, $name, $classId);
+        $classIds = $request->input('class_ids');
+        $primaryClassId = $request->input('primary_class_id');
+        $result = $request->user()->edit($account, $name, $classIds, $primaryClassId);
+        if ($result === null) {
+            return ResponseTool::jsonResponse(2, '无权限：仅可管理主班级在权限组内的学生', null, 403);
+        }
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
     // 修改用户密码
     public function editPassword(EditPasswordRequest $request)
     {
-        $request->user()->editPassword($request->input('account'), $request->input('password'));
+        $result = $request->user()->editPassword($request->input('account'), $request->input('password'));
+        if ($result === null) {
+            return ResponseTool::jsonResponse(2, '无权限：仅可管理主班级在权限组内的学生', null, 403);
+        }
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 }

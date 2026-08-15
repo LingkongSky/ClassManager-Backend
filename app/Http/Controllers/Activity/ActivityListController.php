@@ -12,6 +12,7 @@ use App\Http\Requests\Activity\GetInfoRequest;
 use App\Models\Activity;
 use App\Models\ClassModel;
 use App\Models\Homework;
+use App\Models\Student;
 use Illuminate\Support\Facades\Storage;
 use App\Utils\ResponseTool;
 use App\Utils\ZipTool;
@@ -87,6 +88,10 @@ class ActivityListController extends Controller
         foreach ($users as $row) {
             $status = 0;
             $submitDate = '';
+            $classIds = Student::getUserClasses($row->account);
+            $primaryClassId = $classIds[0] ?? null;
+            $classNames = array_map(fn($id) => ClassModel::getClassName($id), $classIds);
+            $primaryClassName = $primaryClassId ? ClassModel::getClassName($primaryClassId) : null;
 
             if (! is_null($row->update_time)) {
                 $status = 1;
@@ -96,7 +101,11 @@ class ActivityListController extends Controller
             $studentData = [
                 'name' => $row->name,
                 'account' => $row->account,
-                'class_name' => ClassModel::getClassName($row->class_id),
+                'class_ids' => $classIds,
+                'class_names' => $classNames,
+                'primary_class_id' => $primaryClassId,
+                'primary_class_name' => $primaryClassName,
+                'class_name' => $primaryClassName,
                 'status' => $status,
                 'submit_date' => $submitDate,
             ];

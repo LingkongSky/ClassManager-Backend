@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Class;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Class\AddRequest;
+use App\Http\Requests\Class\AppendStudentsRequest;
 use App\Http\Requests\Class\DeleteRequest;
 use App\Http\Requests\Class\EditRequest;
 use App\Models\ClassModel;
+use App\Models\Student;
+use Illuminate\Support\Facades\DB;
 use App\Utils\ResponseTool;
 
 class ClassEditController extends Controller
@@ -46,4 +49,65 @@ class ClassEditController extends Controller
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 
+    // 快速建班：仅追加副班级，不改主班级
+    public function appendStudents(AppendStudentsRequest $request)
+    {
+        $targetClassId = $request->input('target_class_id');
+        $accounts = $request->input('student_accounts');
+
+        if (!ClassModel::where('class_id', $targetClassId)->exists()) {
+            return ResponseTool::jsonResponse(1, '目标班级不存在', null, 422);
+        }
+
+        if (empty($accounts)) {
+            return ResponseTool::jsonResponse(1, '学生列表不能为空', null, 422);
+        }
+
+        $students = Student::query()
+            ->whereIn('account', $accounts)
+            ->select(['id', 'account'])
+            ->get();
+
+        $studentIdMap = [];
+        foreach ($students as $student) {
+            $studentIdMap[$student->account] = $student->id;
+        }
+
+        $notFoundAccounts = array_values(array_filter($accounts, fn($account) => !isset($studentIdMap[$account])));
+        if (!empty($notFoundAccounts)) {
+            return ResponseTool::jsonResponse(1, '存在无效学生账号', ['not_found_accounts' => $notFoundAccounts], 422);
+        }
+
+        DB::transaction(function () use ($accounts, $studentIdMap, $targetClassId) {
+            $studentIds = array_values(array_map(fn($account) => $studentIdMap[$account], $accounts));
+
+            $existsStudentIds = DB::table('student_class_map')
+                ->where('class_id', $targetClassId)
+                ->whereIn('student_id', $studentIds)
+                ->pluck('student_id')
+                ->toArray();
+            $existsMap = array_flip($existsStudentIds);
+
+            $now = now();
+            $insertRows = [];
+            foreach ($studentIds as $studentId) {
+                if (isset($existsMap[$studentId])) {
+                    continue;
+                }
+                $insertRows[] = [
+                    'student_id' => $studentId,
+                    'class_id' => $targetClassId,
+                    'is_primary' => 0,
+                    'created_at' => $now,
+                ];
+            }
+
+            if (!empty($insertRows)) {
+                DB::table('student_class_map')->insert($insertRows);
+            }
+        });
+
+        ClassModel::updateClassStatus();
+        return ResponseTool::jsonResponse(0, 'success', null);
+    }
 }

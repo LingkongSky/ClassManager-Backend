@@ -23,7 +23,7 @@ class PermissionEditController extends Controller
                 $item['account'],
                 $item['name'],
                 $item['password'],
-                $item['class_id'],
+                $item['class_ids'] ?? [],
                 5,
                 $item['permissions_group_id'],
             );
@@ -58,7 +58,13 @@ class PermissionEditController extends Controller
     // 修改管理员
     public function editAdmin(EditAdminRequest $request)
     {
-        Student::editAdmin($request->input('account'), $request->input('name'), $request->input('class_id'), $request->input('permissions_group_id'));
+        Student::editAdmin(
+            $request->input('account'),
+            $request->input('name'),
+            $request->input('class_ids', []),
+            $request->input('permissions_group_id'),
+            $request->input('primary_class_id')
+        );
         return ResponseTool::jsonResponse(0, 'success', null);
     }
 

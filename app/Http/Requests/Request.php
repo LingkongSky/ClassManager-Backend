@@ -30,7 +30,7 @@ class Request extends FormRequest
     protected function authorizeActivityInClass($activityId)
     {
         $activityId = RequestTool::xxs($activityId);
-        return ($this->user()->class_id == Activity::getClass($activityId));
+        return \App\Models\Student::hasClass($this->user()->account, Activity::getClass($activityId));
     }
     
     // 通用规则

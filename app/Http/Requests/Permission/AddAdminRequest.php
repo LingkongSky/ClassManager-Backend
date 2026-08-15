@@ -15,6 +15,9 @@ class AddAdminRequest extends Request
             'data.*.account' => 'required|string|max:20',
             'data.*.password' => 'required|string|min:2|max:99',
             'data.*.class_id' => 'nullable|string|max:20',
+            'data.*.class_ids' => 'sometimes|array',
+            'data.*.class_ids.*' => 'string|max:20',
+            'data.*.primary_class_id' => 'nullable|string|max:20',
             'data.*.permissions_group_id' => 'required|string|max:20',
         ];
     }
@@ -59,6 +62,25 @@ class AddAdminRequest extends Request
             $admin["account"] = RequestTool::xxs($admin["account"]);
             if (isset($admin["class_id"])) {
                 $admin["class_id"] = RequestTool::xxs($admin["class_id"]);
+            }
+            $classIds = $admin["class_ids"] ?? [];
+            if (!is_array($classIds)) {
+                $classIds = [];
+            }
+            $classIds = array_values(array_unique(array_filter(array_map(
+                fn($item) => is_string($item) ? RequestTool::xxs($item) : '',
+                $classIds
+            ))));
+            if (empty($classIds) && !empty($admin["class_id"])) {
+                $classIds = [$admin["class_id"]];
+            }
+            $admin["class_ids"] = $classIds;
+            $admin["primary_class_id"] = RequestTool::xxs($admin["primary_class_id"] ?? ($classIds[0] ?? ''));
+            if (!empty($admin["primary_class_id"]) && in_array($admin["primary_class_id"], $classIds, true)) {
+                $admin["class_ids"] = array_values(array_unique([
+                    $admin["primary_class_id"],
+                    ...$classIds
+                ]));
             }
             $admin["permissions_group_id"] = RequestTool::xxs($admin["permissions_group_id"]);
         }

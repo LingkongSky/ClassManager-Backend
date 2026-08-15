@@ -203,8 +203,8 @@ class ClassModel extends Model
             UPDATE class c
             SET student_count = (
                 SELECT COUNT(*) 
-                FROM student s 
-                WHERE s.class_id = c.class_id
+                FROM student_class_map scm
+                WHERE scm.class_id = c.class_id
             )
         ");
 
@@ -220,8 +220,8 @@ class ClassModel extends Model
                 UPDATE class c
                 SET student_count = (
                     SELECT COUNT(*) 
-                    FROM student s 
-                    WHERE s.class_id = ?
+                    FROM student_class_map scm
+                    WHERE scm.class_id = ?
                 )
                 WHERE c.class_id = ?
             ", [$classId, $classId]);

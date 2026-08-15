@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Permission;
 
 use App\Http\Requests\Request;
+use App\Utils\RequestTool;
 
 class EditAdminRequest extends Request
 {
@@ -12,6 +13,8 @@ class EditAdminRequest extends Request
             'account' => 'required|string|max:20',
             'name' => 'required|string|max:10',
             'class_id' => 'present|nullable|max:20',
+            'class_ids' => 'sometimes|string|max:4096',
+            'primary_class_id' => 'nullable|string|max:20',
             'permissions_group_id' => 'required|string|max:20',
         ];
     }
@@ -33,5 +36,36 @@ class EditAdminRequest extends Request
                 ? null
                 : $this->class_id
         ]);
+    }
+
+    public function passedValidation(): void
+    {
+        $input = $this->all();
+
+        $classIds = [];
+        if (isset($input['class_ids']) && is_string($input['class_ids'])) {
+            $decoded = json_decode($input['class_ids'], true);
+            if (is_array($decoded)) {
+                $classIds = $decoded;
+            }
+        }
+
+        $classIds = array_values(array_unique(array_filter(array_map(
+            fn($item) => is_string($item) ? RequestTool::xxs($item) : '',
+            $classIds
+        ))));
+
+        if (empty($classIds) && !empty($input['class_id'])) {
+            $classIds = [RequestTool::xxs($input['class_id'])];
+        }
+
+        $primaryClassId = RequestTool::xxs($input['primary_class_id'] ?? ($classIds[0] ?? ''));
+        if (!empty($primaryClassId) && !in_array($primaryClassId, $classIds, true)) {
+            $classIds[] = $primaryClassId;
+        }
+
+        $input['class_ids'] = $classIds;
+        $input['primary_class_id'] = $primaryClassId;
+        $this->replace($input);
     }
 }

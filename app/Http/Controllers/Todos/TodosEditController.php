@@ -58,7 +58,7 @@ class TodosEditController extends Controller
         $targetAccount = $request->input('target_account');
 
         // 判断学生是否与活动处于同一班级
-        if ($activity->class_id != Student::getUserClass($targetAccount)) {
+        if (!Student::hasClass($targetAccount, $activity->class_id)) {
             return ResponseTool::jsonResponse(1, 'failed', null);
         }
 

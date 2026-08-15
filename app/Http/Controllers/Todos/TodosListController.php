@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Request;
 use App\Models\Homework;
 use App\Models\Activity;
+use App\Models\Student;
 use App\Http\Requests\Todos\OpenRequest;
 use App\Http\Requests\Todos\GetStartedRequest;
 use App\Http\Requests\Todos\DownloadRequest;
@@ -20,7 +21,7 @@ class TodosListController extends Controller
     // 获取活动
     public function getTodos(Request $request)
     {
-        if (empty($request->user()->class_id)) {
+        if (empty(Student::getUserClasses($request->user()->account))) {
             return ResponseTool::jsonResponse(0, 'success', []);
         }
 
@@ -47,11 +48,15 @@ class TodosListController extends Controller
     // 获取活动数量
     public function getTodosCount(Request $request)
     {
-        if (empty($request->user()->class_id)) {
+        $classIds = Student::getUserClasses($request->user()->account);
+        if (empty($classIds)) {
             return ResponseTool::jsonResponse(0, 'success', 0);
         }
 
-        $count = Activity::getTodosCountByClass($request->user()->class_id);
+        $count = Activity::query()
+            ->whereIn('class_id', $classIds)
+            ->where('status', 1)
+            ->count();
         return ResponseTool::jsonResponse(0, 'success', $count);
     }
 
@@ -59,7 +64,7 @@ class TodosListController extends Controller
     // 获取已开始的活动
     public function getStarted(GetStartedRequest $request)
     {
-        if (empty($request->user()->class_id)) {
+        if (empty(Student::getUserClasses($request->user()->account))) {
             return ResponseTool::jsonResponse(0, 'success', []);
         }
 
@@ -87,11 +92,15 @@ class TodosListController extends Controller
     // 获取已开始的活动数量
     public function getStartedCount(Request $request)
     {
-        if (empty($request->user()->class_id)) {
+        $classIds = Student::getUserClasses($request->user()->account);
+        if (empty($classIds)) {
             return ResponseTool::jsonResponse(0, 'success', 0);
         }
 
-        $count = Activity::getStartedTodosCountByClass($request->user()->class_id);
+        $count = Activity::query()
+            ->whereIn('class_id', $classIds)
+            ->whereIn('status', [1, 2])
+            ->count();
         return ResponseTool::jsonResponse(0, 'success', $count);
     }
 

@@ -53,15 +53,16 @@ class Homework extends Model
         $query = Student::select(
             'student.name',
             'student.account',
-            'student.class_id',
+            'scm.class_id',
             'homework.update_time',
             'homework.activity_id'
         )
+            ->join('student_class_map as scm', 'scm.student_id', '=', 'student.id')
             ->leftJoin('homework', function ($join) use ($activityId) {
                 $join->on('student.account', '=', 'homework.account')
                     ->where('homework.activity_id', '=', $activityId);
             })
-            ->where('student.class_id', Activity::getClass($activityId));
+            ->where('scm.class_id', Activity::getClass($activityId));
 
         if (!empty($queryWord)) {
             $query->where('student.name', 'like', '%' . $queryWord . '%');
@@ -87,15 +88,16 @@ class Homework extends Model
         $query = Student::select(
             'student.name',
             'student.account',
-            'student.class_id',
+            'scm.class_id',
             'homework.update_time',
             'homework.activity_id'
         )
+            ->join('student_class_map as scm', 'scm.student_id', '=', 'student.id')
             ->leftJoin('homework', function ($join) use ($activityId) {
                 $join->on('student.account', '=', 'homework.account')
                     ->where('homework.activity_id', '=', $activityId);
             })
-            ->where('student.class_id', Activity::getClass($activityId));
+            ->where('scm.class_id', Activity::getClass($activityId));
 
         // 添加姓名筛选条件
         if (!empty($queryWord)) {

@@ -16,6 +16,8 @@ Route::middleware('SuperAdminAuth')->group(function () {
         Route::get('getCount', [ClassListController::class, 'getCount']);
         Route::post('edit', [ClassEditController::class, 'edit']);
         Route::post('list', [ClassListController::class, 'list']);
+        Route::get('getStudentsByClasses', [ClassListController::class, 'getStudentsByClasses']);
+        Route::post('appendStudents', [ClassEditController::class, 'appendStudents']);
     });
 
     Route::prefix('permissionEdit')->group(function () {

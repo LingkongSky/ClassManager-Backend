@@ -5,6 +5,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class Activity extends Model
@@ -128,7 +129,9 @@ class Activity extends Model
             return "0/0";
         }
 
-        $allCount = Student::where('class_id', $classId)->count();
+        $allCount = DB::table('student_class_map')
+            ->where('class_id', $classId)
+            ->count();
         $sumbitCount = Homework::where('activity_id', $activityId)->count();
 
         return $sumbitCount . "/" . $allCount;

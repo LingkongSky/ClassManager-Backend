@@ -67,14 +67,22 @@ class LoginController extends Controller
     public function me(Request $request)
     {
         $student = $request->user();
+        $classIds = Student::getUserClasses($student->account);
+        $primaryClassId = $classIds[0] ?? null;
+        $classNames = array_map(fn($id) => ClassModel::getClassName($id), $classIds);
+        $primaryClassName = $primaryClassId ? ClassModel::getClassName($primaryClassId) : null;
 
         return ResponseTool::jsonResponse(0, '获取用户信息成功', [
             'id' => $student->id,
             'name' => $student->name,
             'account' => $student->account,
             'level' => $student->level,
-            'class_id' => $student->class_id,
-            'class_name' => ClassModel::getClassName($student->class_id),
+            'class_ids' => $classIds,
+            'class_names' => $classNames,
+            'primary_class_id' => $primaryClassId,
+            'primary_class_name' => $primaryClassName,
+            'class_id' => $primaryClassId,
+            'class_name' => $primaryClassName,
             'permissions_group_id' => $student->permissions_group_id,
         ]);
     }

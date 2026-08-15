@@ -1,57 +1,50 @@
 <?php
-// app/Models/Student.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 class Student extends Authenticatable
 {
     use HasApiTokens, HasFactory;
 
-    // 指定表名
     protected $table = 'student';
-
-    // 主键字段名
     protected $primaryKey = 'id';
-
-    // 主键类型
     protected $keyType = 'int';
-
-    // 是否自动递增
     public $incrementing = true;
-
-    // 是否维护时间戳
     public $timestamps = false;
 
-    // 可批量赋值的字段
     protected $fillable = [
         'name',
         'password',
         'account',
         'date',
         'level',
-        'class_id',
         'permissions_group_id',
     ];
 
-    // 隐藏的字段（如密码）
     protected $hidden = [
         'password',
     ];
 
-    // 字段类型转换
     protected $casts = [
         'level' => 'integer',
     ];
 
-    // 缓存属性
     protected $permissionsGroupCache = null;
     protected static $userClassCache = [];
 
-    //获取权限组
+    protected static function booted(): void
+    {
+        // 无外键约束时，应用层兜底清理班级映射，避免孤儿数据
+        static::deleting(function (self $student) {
+            DB::table('student_class_map')->where('student_id', $student->id)->delete();
+        });
+    }
+
     protected function getPermissionsGroup()
     {
         if ($this->level >= 10) {
@@ -65,8 +58,6 @@ class Student extends Authenticatable
         return $this->permissionsGroupCache;
     }
 
-
-    // 检查班级权限
     protected function checkClassPermission($classId = null, $account = null)
     {
         if ($this->level >= 10) {
@@ -79,14 +70,18 @@ class Student extends Authenticatable
         }
 
         if ($account) {
-            $targetClassId = self::getUserClass($account);
-            return $targetClassId && $permissionsGroup->hasTarget($targetClassId);
+            $targetClassIds = self::getUserClasses($account);
+            foreach ($targetClassIds as $targetClassId) {
+                if ($permissionsGroup->hasTarget($targetClassId)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         return $classId && $permissionsGroup->hasTarget($classId);
     }
 
-    // 生成token
     public function createTokenWithExpiry(string $name, bool $remember = false, array $abilities = ['*'])
     {
         $expiresAt = $remember
@@ -96,38 +91,126 @@ class Student extends Authenticatable
         return $this->createToken($name, $abilities, $expiresAt);
     }
 
-    // 密码Hash
     public static function hashPassword(string $password)
     {
-        return hash_hmac("sha256", $password, config('app.password_sign'));
+        return hash_hmac('sha256', $password, config('app.password_sign'));
     }
 
-    // 创建学生
+    /**
+     * 更新学生班级映射。
+     */
+    protected static function syncStudentClasses(int $studentId, array $classIds, ?string $primaryClassId = null): void
+    {
+        $classIds = array_values(array_unique(array_filter($classIds, fn($item) => !empty($item))));
+
+        if (empty($classIds)) {
+            DB::table('student_class_map')->where('student_id', $studentId)->delete();
+            return;
+        }
+
+        if ($primaryClassId === null || !in_array($primaryClassId, $classIds, true)) {
+            $primaryClassId = $classIds[0];
+        }
+
+        DB::transaction(function () use ($studentId, $classIds, $primaryClassId) {
+            DB::table('student_class_map')->where('student_id', $studentId)->delete();
+
+            $rows = [];
+            $now = now();
+            foreach ($classIds as $classId) {
+                $rows[] = [
+                    'student_id' => $studentId,
+                    'class_id' => $classId,
+                    'is_primary' => $classId === $primaryClassId ? 1 : 0,
+                    'created_at' => $now,
+                ];
+            }
+
+            DB::table('student_class_map')->insert($rows);
+        });
+    }
+
+    protected static function getStudentIdByAccount(string $account): ?int
+    {
+        return self::where('account', $account)->value('id');
+    }
+
+    public static function getUserClasses(string $account): array
+    {
+        $studentId = self::getStudentIdByAccount($account);
+        if (!$studentId) {
+            return [];
+        }
+
+        return DB::table('student_class_map')
+            ->where('student_id', $studentId)
+            ->orderByDesc('is_primary')
+            ->pluck('class_id')
+            ->toArray();
+    }
+
+    public static function hasClass(string $account, string $classId): bool
+    {
+        $studentId = self::getStudentIdByAccount($account);
+        if (!$studentId) {
+            return false;
+        }
+
+        return DB::table('student_class_map')
+            ->where('student_id', $studentId)
+            ->where('class_id', $classId)
+            ->exists();
+    }
+
+    /**
+     * 仅主班级在权限组内时，才允许管理目标学生信息。
+     */
+    public function canManageStudentByPrimaryClass(string $targetAccount): bool
+    {
+        if ($this->level >= 10) {
+            return true;
+        }
+
+        $permissionsGroup = $this->getPermissionsGroup();
+        if (!$permissionsGroup) {
+            return false;
+        }
+
+        $targetPrimaryClassId = self::getUserClass($targetAccount);
+        if (!$targetPrimaryClassId) {
+            return false;
+        }
+
+        return $permissionsGroup->hasTarget($targetPrimaryClassId);
+    }
+
     public function createStudent(
         string $account,
         string $name,
         string $password,
-        ?string $classId = null,
+        array $classIds,
         ?int $level = 0,
         ?string $permissionsGroupId = null,
     ) {
-        // 权限检查
         if ($this->level < 10) {
             $permissionsGroup = $this->getPermissionsGroup();
             if (!$permissionsGroup) {
                 return null;
             }
-            if ($classId && !$permissionsGroup->hasTarget($classId)) {
-                return null;
+            foreach ($classIds as $classId) {
+                if (!$permissionsGroup->hasTarget($classId)) {
+                    return null;
+                }
             }
         }
 
         try {
-            if ($classId) {
-                if (!ClassModel::where('class_id', $classId)->exists()) {
+            if (!empty($classIds)) {
+                $classCount = ClassModel::whereIn('class_id', $classIds)->count();
+                if ($classCount !== count(array_unique($classIds))) {
                     return [
                         'success' => false,
-                        'message' => '班级不存在'
+                        'message' => '班级不存在',
                     ];
                 }
             }
@@ -136,16 +219,15 @@ class Student extends Authenticatable
                 if (!PermissionsGroup::where('group_id', $permissionsGroupId)->exists()) {
                     return [
                         'success' => false,
-                        'message' => '权限组不存在'
+                        'message' => '权限组不存在',
                     ];
                 }
             }
 
-            // 检查账号是否重复
             if (self::where('account', $account)->exists()) {
                 return [
                     'success' => false,
-                    'message' => '账号已存在'
+                    'message' => '账号已存在',
                 ];
             }
 
@@ -158,38 +240,31 @@ class Student extends Authenticatable
                 $student->level = $level;
             }
 
-            if ($classId !== null) {
-                $student->class_id = $classId;
-            }
-
             if ($permissionsGroupId !== null) {
                 $student->permissions_group_id = $permissionsGroupId;
             }
 
-            // 保存到数据库
             $student->save();
 
-            if ($classId !== null) {
-                ClassModel::updateTargetClass($classId);
-            }
+            self::syncStudentClasses($student->id, $classIds);
+            ClassModel::updateClassStatus();
 
             return [
                 'success' => true,
                 'message' => '账号创建成功',
-                'data' => null
+                'data' => null,
             ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => '创建账号失败: ' . $e->getMessage()
+                'message' => '创建账号失败: ' . $e->getMessage(),
             ];
         }
     }
 
-    // 删除对象
     public function deleteByAccount(string $account)
     {
-        if (!$this->checkClassPermission(null, $account)) {
+        if (!$this->canManageStudentByPrimaryClass($account)) {
             return null;
         }
 
@@ -199,41 +274,31 @@ class Student extends Authenticatable
             if (!$student) {
                 return [
                     'success' => false,
-                    'message' => '账号不存在'
+                    'message' => '账号不存在',
                 ];
             }
 
-            $classId = $student->class_id;
-
-            // 删除用户
             $student->delete();
-
-            if ($classId) {
-                ClassModel::updateTargetClass($classId);
-            }
-
-            // 清除缓存
+            ClassModel::updateClassStatus();
             unset(self::$userClassCache[$account]);
 
             return [
                 'success' => true,
-                'message' => '账号删除成功'
+                'message' => '账号删除成功',
             ];
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => '删除账号失败: ' . $e->getMessage()
+                'message' => '删除账号失败: ' . $e->getMessage(),
             ];
         }
     }
 
-    // 判断传入的class_id是否在用户的权限组里
     public function isClassInPermission($classId): bool
     {
         return $this->checkClassPermission($classId);
     }
 
-    // 获取管理员的所属班级
     public function getStudentPermissionClass()
     {
         if ($this->level == 10) {
@@ -253,17 +318,19 @@ class Student extends Authenticatable
             ->toArray();
     }
 
-    // 根据班级查询学生
     public function getStudentByClass($classId, $queryWord, $queryCount, $limit = 20)
     {
         if (!$this->checkClassPermission($classId)) {
             return null;
         }
 
-        $query = $this->query()->where('class_id', $classId);
+        $query = self::query()
+            ->join('student_class_map as scm', 'scm.student_id', '=', 'student.id')
+            ->where('scm.class_id', $classId)
+            ->select('student.*', 'scm.class_id');
 
         if (!empty($queryWord)) {
-            $query->where('name', 'like', $queryWord . '%');
+            $query->where('student.name', 'like', $queryWord . '%');
         }
 
         return $query->offset($queryCount)
@@ -271,13 +338,17 @@ class Student extends Authenticatable
             ->get();
     }
 
-    // 查询所有管理员
     public static function getAdminList($queryCount = 0, $queryWord = '', $limit = 20)
     {
-        $query = self::where('level', 5);
+        $query = self::query()
+            ->where('student.level', 5)
+            ->leftJoin('student_class_map as scm', function ($join) {
+                $join->on('scm.student_id', '=', 'student.id')->where('scm.is_primary', 1);
+            })
+            ->select('student.*', 'scm.class_id');
 
         if (!empty($queryWord)) {
-            $query->where('name', 'like', $queryWord . '%');
+            $query->where('student.name', 'like', $queryWord . '%');
         }
 
         return $query->offset($queryCount)
@@ -285,7 +356,6 @@ class Student extends Authenticatable
             ->get();
     }
 
-    // 获取管理员数量
     public static function getAdminCount(?string $queryWord = ''): int
     {
         $query = self::where('level', 5);
@@ -297,46 +367,50 @@ class Student extends Authenticatable
         return $query->count();
     }
 
-    // 获取学生班级
     public static function getUserClass($account)
     {
         if (!isset(self::$userClassCache[$account])) {
-            self::$userClassCache[$account] = self::where('account', $account)
+            $studentId = self::getStudentIdByAccount($account);
+            if (!$studentId) {
+                return null;
+            }
+
+            self::$userClassCache[$account] = DB::table('student_class_map')
+                ->where('student_id', $studentId)
+                ->orderByDesc('is_primary')
                 ->value('class_id');
         }
 
         return self::$userClassCache[$account];
     }
 
-    // 获取学生数量
     public static function getStudentCount(): int
     {
         return self::count();
     }
 
-    // 获取学生名字
     public static function getName($account)
     {
         return self::where('account', $account)->value('name');
     }
 
-    // 根据班级获取学生数量
     public function getCountByClass(string $classId, ?string $queryWord = '')
     {
         if (!$this->checkClassPermission($classId)) {
             return null;
         }
 
-        $query = self::where('class_id', $classId);
+        $query = self::query()
+            ->join('student_class_map as scm', 'scm.student_id', '=', 'student.id')
+            ->where('scm.class_id', $classId);
 
         if (!empty($queryWord)) {
-            $query->where('name', 'like', $queryWord . '%');
+            $query->where('student.name', 'like', $queryWord . '%');
         }
 
         return $query->count();
     }
 
-    // 修改密码
     public static function editAdminPassword(string $account, string $password)
     {
         $affected = self::where('account', $account)
@@ -346,20 +420,19 @@ class Student extends Authenticatable
         if ($affected === 0) {
             return [
                 'success' => false,
-                'message' => '管理员账号不存在'
+                'message' => '管理员账号不存在',
             ];
         }
 
         return [
             'success' => true,
-            'message' => '密码修改成功'
+            'message' => '密码修改成功',
         ];
     }
 
-    // 修改学生密码
     public function editPassword(string $account, string $password)
     {
-        if (!$this->checkClassPermission(null, $account) && $this->account != $account) {
+        if (!$this->canManageStudentByPrimaryClass($account) && $this->account != $account) {
             return null;
         }
 
@@ -369,51 +442,54 @@ class Student extends Authenticatable
         if ($affected === 0) {
             return [
                 'success' => false,
-                'message' => '账号不存在'
+                'message' => '账号不存在',
             ];
         }
 
         return [
             'success' => true,
-            'message' => '密码修改成功'
+            'message' => '密码修改成功',
         ];
     }
 
-    // 修改管理员
-    public static function editAdmin(string $account, string $name, ?string $classId, string $permissionGroupId)
+    public static function editAdmin(string $account, string $name, ?array $classIds, string $permissionGroupId, ?string $primaryClassId = null)
     {
         try {
-            // 先验证权限组是否存在
             if (!PermissionsGroup::where('group_id', $permissionGroupId)->exists()) {
                 return [
                     'success' => false,
-                    'message' => '权限组不存在'
+                    'message' => '权限组不存在',
                 ];
             }
 
-            // 验证班级是否存在（如果class_id不为空）
-            if ($classId && !ClassModel::where('class_id', $classId)->exists()) {
-                return [
-                    'success' => false,
-                    'message' => '班级不存在'
-                ];
+            if (!empty($classIds)) {
+                $classCount = ClassModel::whereIn('class_id', $classIds)->count();
+                if ($classCount !== count(array_unique($classIds))) {
+                    return [
+                        'success' => false,
+                        'message' => '班级不存在',
+                    ];
+                }
             }
 
-            // 更新管理员信息
-            $affected = self::where('account', $account)
+            $student = self::where('account', $account)
                 ->where('level', 5)
-                ->update([
-                    'name' => $name,
-                    'class_id' => $classId,
-                    'permissions_group_id' => $permissionGroupId
-                ]);
+                ->first();
 
-            if ($affected === 0) {
+            if (!$student) {
                 return [
                     'success' => false,
-                    'message' => '管理员账号不存在'
+                    'message' => '管理员账号不存在',
                 ];
             }
+
+            $student->update([
+                'name' => $name,
+                'permissions_group_id' => $permissionGroupId,
+            ]);
+
+            self::syncStudentClasses($student->id, $classIds ?? [], $primaryClassId);
+            ClassModel::updateClassStatus();
 
             return [
                 'success' => true,
@@ -422,43 +498,46 @@ class Student extends Authenticatable
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => '修改管理员信息失败: ' . $e->getMessage()
+                'message' => '修改管理员信息失败: ' . $e->getMessage(),
             ];
         }
     }
 
-    // 修改用户
-    public function edit(string $account, string $name, string $classId)
+    public function edit(string $account, string $name, array $classIds, ?string $primaryClassId = null)
     {
-        // 检查源账号和目标班级权限
-        if (!$this->checkClassPermission(null, $account) || !$this->checkClassPermission($classId)) {
+        foreach ($classIds as $classId) {
+            if (!$this->checkClassPermission($classId)) {
+                return null;
+            }
+        }
+
+        if (!$this->canManageStudentByPrimaryClass($account)) {
             return null;
         }
 
         try {
-            // 验证班级是否存在
-            if (!ClassModel::where('class_id', $classId)->exists()) {
+            $classCount = ClassModel::whereIn('class_id', $classIds)->count();
+            if ($classCount !== count(array_unique($classIds))) {
                 return [
                     'success' => false,
-                    'message' => '班级不存在'
+                    'message' => '班级不存在',
                 ];
             }
 
-            // 更新用户信息
-            $affected = self::where('account', $account)
-                ->update([
-                    'class_id' => $classId,
-                    'name' => $name
-                ]);
-
-            if ($affected === 0) {
+            $student = self::where('account', $account)->first();
+            if (!$student) {
                 return [
                     'success' => false,
-                    'message' => '账号不存在'
+                    'message' => '账号不存在',
                 ];
             }
 
-            // 清除缓存
+            $student->update([
+                'name' => $name,
+            ]);
+
+            self::syncStudentClasses($student->id, $classIds, $primaryClassId);
+            ClassModel::updateClassStatus();
             unset(self::$userClassCache[$account]);
 
             return [
@@ -468,33 +547,31 @@ class Student extends Authenticatable
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => '修改信息失败: ' . $e->getMessage()
+                'message' => '修改信息失败: ' . $e->getMessage(),
             ];
         }
     }
 
-    // 设置用户的权限组
     public static function setPermissionGroup($account, $permissionGroupId)
     {
         try {
-            // 先检查权限组是否存在
             if (!PermissionsGroup::where('group_id', $permissionGroupId)->exists()) {
                 return [
                     'success' => false,
-                    'message' => '权限组不存在'
+                    'message' => '权限组不存在',
                 ];
             }
 
-            // 更新权限组
             $affected = self::where('account', $account)
-                ->update(['permissions_group_id' => $permissionGroupId,
-                'level' => 5,
-            ]);
+                ->update([
+                    'permissions_group_id' => $permissionGroupId,
+                    'level' => 5,
+                ]);
 
             if ($affected === 0) {
                 return [
                     'success' => false,
-                    'message' => '用户不存在'
+                    'message' => '用户不存在',
                 ];
             }
 
@@ -505,27 +582,29 @@ class Student extends Authenticatable
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => '设置权限组错误: ' . $e->getMessage()
+                'message' => '设置权限组错误: ' . $e->getMessage(),
             ];
         }
     }
 
-    // 获取待办
     public function getTodos()
     {
-        return Activity::select(['activity_id', 'title', 'status', 'start_time', 'stop_time','name','type'])
-            ->where('class_id', $this->class_id)
+        $classIds = self::getUserClasses($this->account);
+
+        return Activity::select(['activity_id', 'title', 'status', 'start_time', 'stop_time', 'name', 'type'])
+            ->whereIn('class_id', $classIds)
             ->where('status', 1)
             ->orderBy('start_time', 'asc')
             ->limit(50)
             ->get();
     }
 
-    // 获取已开始
     public function getStarted()
     {
-        return Activity::select(['activity_id', 'title', 'status', 'start_time', 'stop_time','name','type'])
-            ->where('class_id', $this->class_id)
+        $classIds = self::getUserClasses($this->account);
+
+        return Activity::select(['activity_id', 'title', 'status', 'start_time', 'stop_time', 'name', 'type'])
+            ->whereIn('class_id', $classIds)
             ->whereIn('status', [1, 2])
             ->orderBy('start_time', 'asc')
             ->limit(50)
