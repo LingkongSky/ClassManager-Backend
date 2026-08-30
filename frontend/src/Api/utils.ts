@@ -73,9 +73,33 @@ export const handleDownload = <T>(
   }
 }
 
+const getResponseErrorMessage = (data: any): string | null => {
+  if (typeof data === 'string') {
+    try {
+      const parsed = JSON.parse(data);
+      return parsed?.message || parsed?.error || null;
+    } catch {
+      return data.trim() || null;
+    }
+  }
+
+  return data?.message || data?.error || null;
+};
+
 export const handleError = (error: any, reject: (reason?: any) => void) => {
   if (error.response) {
-    reject(new Error(`请求失败: ${error.response.status}`));
+    const { data, status } = error.response;
+
+    if (data instanceof Blob) {
+      data.text()
+        .then((text) => {
+          reject(new Error(getResponseErrorMessage(text) || `请求失败: ${status}`));
+        })
+        .catch(() => reject(new Error(`请求失败: ${status}`)));
+      return;
+    }
+
+    reject(new Error(getResponseErrorMessage(data) || `请求失败: ${status}`));
   } else if (error.request) {
     reject(new Error('网络错误，请检查网络连接'));
   } else {
