@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (DB::getDriverName() !== 'mysql' || !Schema::hasTable('student_class_map')) {
+        if (!in_array(DB::getDriverName(), ['mysql', 'mariadb'], true) || !Schema::hasTable('student_class_map')) {
             return;
         }
 
@@ -23,7 +23,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (DB::getDriverName() !== 'mysql' || !Schema::hasTable('student_class_map')) {
+        if (!in_array(DB::getDriverName(), ['mysql', 'mariadb'], true) || !Schema::hasTable('student_class_map')) {
             return;
         }
 

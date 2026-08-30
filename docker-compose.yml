@@ -13,13 +13,11 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: ${DOCKER_APP_URL:-http://localhost:8080}
-      DB_HOST: ${DOCKER_DB_HOST:-host.docker.internal}
-      REDIS_HOST: ${DOCKER_REDIS_HOST:-host.docker.internal}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - "${APP_PORT:-8080}:80"
+      APP_URL: ${DOCKER_APP_URL:-http://localhost:4157}
+      APP_LISTEN_PORT: ${APP_PORT:-4157}
+      DB_HOST: ${DOCKER_DB_HOST:-127.0.0.1}
+      REDIS_HOST: ${DOCKER_REDIS_HOST:-127.0.0.1}
+    network_mode: host
     volumes:
       - type: bind
         source: ${ACTIVITY_FILES_PATH:-./storage/files/activity}
@@ -27,7 +25,7 @@ services:
         bind:
           create_host_path: true
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1/api/ping"]
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:$${APP_LISTEN_PORT:-4157}/api/ping"]
       interval: 30s
       timeout: 5s
       retries: 3

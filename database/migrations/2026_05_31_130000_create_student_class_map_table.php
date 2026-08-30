@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->integer('student_id');
             $classId = $table->string('class_id', 20);
-            if (DB::getDriverName() === 'mysql') {
+            if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
                 $classId->collation('utf8mb4_general_ci');
             }
             $table->boolean('is_primary')->default(false);

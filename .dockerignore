@@ -16,5 +16,6 @@ storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
 storage/files/activity
+bootstrap/cache/*.php
 tests
 *.log

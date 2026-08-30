@@ -15,10 +15,13 @@ return new class extends Migration
             }
 
             // 仅检查旧字段不为空的学生，确保映射都已存在
+            $studentClassId = in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)
+                ? DB::raw('s.class_id COLLATE utf8mb4_general_ci')
+                : 's.class_id';
             $missingMappings = DB::table('student as s')
-                ->leftJoin('student_class_map as scm', function ($join) {
+                ->leftJoin('student_class_map as scm', function ($join) use ($studentClassId) {
                     $join->on('scm.student_id', '=', 's.id')
-                        ->on('scm.class_id', '=', 's.class_id');
+                        ->on('scm.class_id', '=', $studentClassId);
                 })
                 ->whereNotNull('s.class_id')
                 ->where('s.class_id', '<>', '')
@@ -29,12 +32,14 @@ return new class extends Migration
                 throw new RuntimeException("存在 {$missingMappings} 条学生班级未完成映射，禁止删除 student.class_id。");
             }
 
-            // SQLite 不会在删除字段时自动移除相关索引；MySQL 显式删除也更可控。
-            Schema::table('student', function (Blueprint $table) {
-                $table->dropIndex(['class_id']);
-                $table->dropIndex(['class_id', 'level']);
-                $table->dropIndex(['class_id', 'date']);
-            });
+            // 历史数据库的索引并不完全一致，仅删除实际存在的索引。
+            foreach ([['class_id'], ['class_id', 'level'], ['class_id', 'date']] as $columns) {
+                if (Schema::hasIndex('student', $columns)) {
+                    Schema::table('student', function (Blueprint $table) use ($columns) {
+                        $table->dropIndex($columns);
+                    });
+                }
+            }
 
             Schema::table('student', function (Blueprint $table) {
                 $table->dropColumn('class_id');

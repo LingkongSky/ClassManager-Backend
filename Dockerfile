@@ -21,11 +21,12 @@ RUN npm run build
 FROM composer:2 AS vendor-build
 
 WORKDIR /app
-COPY . ./
+COPY composer.json composer.lock ./
 RUN composer install \
     --no-dev \
     --no-interaction \
     --no-progress \
+    --no-scripts \
     --prefer-dist \
     --optimize-autoloader
 
@@ -61,9 +62,11 @@ COPY --from=frontend-build /app/dist/ ./public/
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/classmanager.conf
 COPY docker/php.ini /usr/local/etc/php/conf.d/classmanager.ini
+COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/zzz-classmanager.conf
 COPY docker/entrypoint.sh /usr/local/bin/classmanager-entrypoint
 
-RUN chmod +x /usr/local/bin/classmanager-entrypoint \
+RUN php artisan package:discover --ansi \
+    && chmod +x /usr/local/bin/classmanager-entrypoint \
     && mkdir -p \
         storage/app/public \
         storage/files/activity/homework \
@@ -76,7 +79,7 @@ RUN chmod +x /usr/local/bin/classmanager-entrypoint \
         storage/logs \
     && chown -R www-data:www-data storage bootstrap/cache
 
-EXPOSE 80
+EXPOSE 4157
 
 ENTRYPOINT ["classmanager-entrypoint"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
