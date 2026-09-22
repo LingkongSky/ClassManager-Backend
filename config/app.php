@@ -124,5 +124,6 @@ return [
     ],
 
   'password_sign' => env('PASSWORDSIGN', 'default_value'),
-  'max_upload_size' => env('FileMaxUplaodSize', '1024'),
+  // Laravel validates uploaded file sizes in KB: 204800 KB = 200 MB.
+  'max_upload_size' => (int) env('FileMaxUplaodSize', 204800),
 ];

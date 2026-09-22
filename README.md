@@ -30,6 +30,12 @@ npm run lint        # 检查前端
 composer test       # 运行后端测试
 ```
 
+### 文件上传限制
+
+单个文件默认上限为 200 MB。后端 `.env` 中的 `FileMaxUplaodSize` 单位为 KB，应设置为 `204800`；前端 `frontend/src/global.ts` 使用字节，对应值为 `209715200`。该限制适用于学生提交、管理员代交和活动附件。
+
+已有环境升级时，请检查 `.env`：旧模板的 `1024` 只允许 1 MB，误填 `209715200` 则会把后端上限放大 1024 倍。修改后运行 `php artisan config:clear`；使用配置缓存的环境再运行 `php artisan config:cache`。Docker 环境在应用容器内执行这些命令。自定义上限时需同步前后端，并检查 PHP 的 `upload_max_filesize`、`post_max_size` 和 Nginx 的 `client_max_body_size`；仓库中的 Docker 配置均为 256 MB，其中请求总大小限制还需容纳表单及多文件开销。
+
 ## Docker 部署
 
 容器内由 Nginx 提供前端静态文件，并把 `/api` 转发给 PHP-FPM。只有一个应用容器、一个对外端口；MySQL 和 Redis 继续使用 `.env` 中配置的外部服务。

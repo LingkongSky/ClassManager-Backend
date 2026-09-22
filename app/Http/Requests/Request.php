@@ -39,7 +39,12 @@ class Request extends FormRequest
         return [
             'required' => ':attribute 不能为空',
             'string' => ':attribute 必须为字符串',
-            'max' => ':attribute 不能超过:max个字符',
+            'max' => [
+                'string' => ':attribute 不能超过:max个字符',
+                'file' => ':attribute 文件大小不能超过 :max KB',
+                'numeric' => ':attribute 不能大于 :max',
+                'array' => ':attribute 不能超过 :max 项',
+            ],
             'integer' => ':attribute 必须为整数',
             'numeric' => ':attribute 必须为数字',
         ];
