@@ -3,6 +3,7 @@ services:
     build:
       context: .
       args:
+        DEBIAN_MIRROR: ${DEBIAN_MIRROR:-}
         VITE_FILING_ICP_TEXT: ${VITE_FILING_ICP_TEXT:-}
         VITE_FILING_ICP_URL: ${VITE_FILING_ICP_URL:-}
         VITE_FILING_PSB_TEXT: ${VITE_FILING_PSB_TEXT:-}

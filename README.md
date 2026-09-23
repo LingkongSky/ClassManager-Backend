@@ -54,6 +54,7 @@ php artisan key:generate
 - `DOCKER_REDIS_HOST`：容器访问的 Redis 主机，默认 `host.docker.internal`
 - `ACTIVITY_FILES_PATH`：活动文件的宿主机目录，默认 `./storage/files/activity`
 - `DOCKER_APP_URL`：外部访问地址，默认 `http://localhost:4157`
+- `DEBIAN_MIRROR`：构建 PHP 镜像时使用的 Debian 软件源站点，例如 `https://mirrors.ustc.edu.cn`（不带 `/debian`）；留空使用默认源。Docker 镜像加速器不会加速 `apt-get` 下载。
 
 启动：
 
